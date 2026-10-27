@@ -17,7 +17,7 @@
     <string name="ledger_month_count">%1$d건</string>
     <string name="ledger_unconverted">외화 %1$d건은 환율을 받은 뒤 합산돼요</string>
     <string name="ledger_empty_title">아직 기록이 없어요</string>
-    <string name="ledger_empty_hint">오른쪽 아래 + 를 눌러 기록하세요</string>
+    <string name="ledger_empty_hint">결제 화면을 캡처해 이 앱으로 공유하거나 오른쪽 아래 버튼을 누르세요</string>
     <string name="add_entry">기록하기</string>
     <string name="edit_entry">기록 수정</string>
     <string name="field_amount">금액</string>
@@ -48,4 +48,21 @@
     <string name="category_education">교육</string>
     <string name="category_travel">여행</string>
     <string name="category_other">기타</string>
+
+    <!-- 캡처로 기록 -->
+    <string name="import_screenshot">캡처 인식</string>
+    <string name="add_manually">직접 기록하기</string>
+    <string name="import_title">인식 결과 확인</string>
+    <string name="import_title_count">인식 결과 확인 (%1$d/%2$d)</string>
+    <string name="import_reading">캡처를 읽는 중</string>
+    <string name="import_reading_count">%2$d장 중 %1$d번째 캡처를 읽는 중</string>
+    <string name="import_reading_hint">휴대폰 안에서 인식하며, 캡처는 업로드되지 않아요.</string>
+    <string name="import_no_amount">금액을 찾지 못했어요. 캡처를 보고 입력해 주세요.</string>
+    <string name="import_candidates">캡처 속 금액</string>
+    <string name="import_duplicate">이미 기록했을 수 있어요: %1$s</string>
+    <string name="import_skip">건너뛰기</string>
+    <string name="msg_image_failed">열 수 없는 이미지는 건너뛰었어요</string>
+    <string name="source_screenshot">캡처</string>
+    <string name="screenshot_enlarge">캡처 이미지, 누르면 크게 보여요</string>
+    <string name="close">닫기</string>
 </resources>

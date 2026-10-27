@@ -38,17 +38,19 @@ import com.codefield.snapledger.model.Currency
 import com.codefield.snapledger.model.Entry
 import com.codefield.snapledger.model.Money
 import com.codefield.snapledger.model.MonthSummary
+import com.codefield.snapledger.model.Source
 import com.codefield.snapledger.ui.common.CategoryBadge
 import com.codefield.snapledger.ui.common.ScreenHeader
 import com.codefield.snapledger.ui.common.categoryName
 import com.codefield.snapledger.ui.common.formatMoney
+import java.io.File
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 /**
  * 账本：顶部是本月支出，下面按天列出每一笔。点一笔可以修改。
- * 记一笔的 + 按钮在外层 Scaffold 里（这样提示条出现时按钮会让开），
+ * 记一笔的按钮在外层 Scaffold 里（这样提示条出现时按钮会让开），
  * 所以对话框开没开由外面传进来：dialogFor 是 0 表示新记一笔，其他数字是正在修改的那一笔。
  */
 @OptIn(ExperimentalFoundationApi::class)
@@ -63,6 +65,7 @@ fun LedgerScreen(
     onSave: (Entry) -> Unit,
     onDelete: (Entry) -> Unit,
     onOpenSettings: () -> Unit,
+    imageFor: (String) -> File,
     modifier: Modifier = Modifier,
 ) {
     var confirmDelete by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -72,7 +75,8 @@ fun LedgerScreen(
 
     Box(modifier = modifier.fillMaxSize()) {
         LazyColumn(
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
+            // 底部留出两个按钮的高度，最后一笔不会被挡住。
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 168.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item {
@@ -104,6 +108,7 @@ fun LedgerScreen(
             },
             onDelete = editing?.let { entry -> { confirmDelete = entry.id } },
             onDismiss = { onDialogFor(null) },
+            image = editing?.imagePath?.let(imageFor),
         )
     }
 
@@ -171,8 +176,9 @@ private fun EntryRow(entry: Entry, zone: ZoneId, onClick: () -> Unit) {
                     overflow = TextOverflow.Ellipsis,
                 )
                 val time = Instant.ofEpochMilli(entry.time).atZone(zone).format(TIME_FORMAT)
+                val source = if (entry.source == Source.SCREENSHOT) stringResource(R.string.source_screenshot) else ""
                 Text(
-                    text = listOf(time, entry.note).filter { it.isNotBlank() }.joinToString(" · "),
+                    text = listOf(time, source, entry.note).filter { it.isNotBlank() }.joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,

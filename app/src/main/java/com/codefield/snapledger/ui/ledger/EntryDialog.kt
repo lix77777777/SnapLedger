@@ -33,15 +33,21 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import com.codefield.snapledger.R
 import com.codefield.snapledger.logic.AmountInput
 import com.codefield.snapledger.model.Category
 import com.codefield.snapledger.model.Currency
 import com.codefield.snapledger.model.Entry
+import com.codefield.snapledger.model.Money
 import com.codefield.snapledger.model.Source
+import com.codefield.snapledger.ui.common.ScreenshotThumbnail
+import com.codefield.snapledger.ui.common.ScreenshotViewer
 import com.codefield.snapledger.ui.common.categoryEmoji
 import com.codefield.snapledger.ui.common.categoryName
 import com.codefield.snapledger.ui.common.currencySymbol
+import com.codefield.snapledger.ui.common.formatMoney
+import java.io.File
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -50,8 +56,12 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
 /**
- * 记一笔或修改一笔。输入的内容用 rememberSaveable 保存，旋转屏幕也不会丢。
- * initial 为 null 时是新记一笔；onDelete 为 null 时不显示删除按钮。
+ * 记一笔、修改一笔，或者确认截图识别出的一笔。输入的内容用 rememberSaveable 保存，旋转屏幕也不会丢。
+ * initial 为 null 时是新记一笔；截图识别的结果也用 initial 传进来（编号是 0，金额是 0 表示没识别出金额）。
+ * onDelete 为 null 时不显示删除按钮。
+ * @param image 这笔账的截图，显示成小图，点了看大图。
+ * @param candidates 截图里找到的几个金额，识别错了可以点别的。
+ * @param notices 显示在最上面的提醒，比如没找到金额、可能记过了。
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -62,8 +72,16 @@ fun EntryDialog(
     onSave: (Entry) -> Unit,
     onDelete: (() -> Unit)?,
     onDismiss: () -> Unit,
+    title: String = stringResource(if (initial == null) R.string.add_entry else R.string.edit_entry),
+    image: File? = null,
+    candidates: List<Money> = emptyList(),
+    notices: List<String> = emptyList(),
+    dismissLabel: String = stringResource(R.string.cancel),
+    dismissOnClickOutside: Boolean = true,
 ) {
-    var amountText by rememberSaveable { mutableStateOf(initial?.amount?.let(AmountInput::format).orEmpty()) }
+    var amountText by rememberSaveable {
+        mutableStateOf(initial?.amount?.takeIf { it.minor > 0 }?.let(AmountInput::format).orEmpty())
+    }
     var currency by rememberSaveable { mutableStateOf(initial?.amount?.currency ?: defaultCurrency) }
     var merchant by rememberSaveable { mutableStateOf(initial?.merchant.orEmpty()) }
     var category by rememberSaveable { mutableStateOf(initial?.category ?: Category.OTHER) }
@@ -71,6 +89,7 @@ fun EntryDialog(
     var note by rememberSaveable { mutableStateOf(initial?.note.orEmpty()) }
     var showError by rememberSaveable { mutableStateOf(false) }
     var picker by rememberSaveable { mutableStateOf(Picker.NONE) }
+    var viewingImage by rememberSaveable { mutableStateOf(false) }
 
     val amount = AmountInput.parse(amountText, currency)
     val locale = LocalConfiguration.current.locales[0]
@@ -78,9 +97,34 @@ fun EntryDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(if (initial == null) R.string.add_entry else R.string.edit_entry)) },
+        properties = DialogProperties(dismissOnClickOutside = dismissOnClickOutside),
+        title = { Text(title) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (image != null || notices.isNotEmpty()) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        if (image != null) ScreenshotThumbnail(image, onClick = { viewingImage = true })
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            notices.forEach { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.secondary) }
+                        }
+                    }
+                }
+                if (candidates.size > 1) {
+                    Text(stringResource(R.string.import_candidates), style = MaterialTheme.typography.labelLarge)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        candidates.forEach { option ->
+                            FilterChip(
+                                selected = option == amount,
+                                onClick = {
+                                    amountText = AmountInput.format(option)
+                                    currency = option.currency
+                                    showError = false
+                                },
+                                label = { Text(formatMoney(option)) },
+                            )
+                        }
+                    }
+                }
                 OutlinedTextField(
                     value = amountText,
                     onValueChange = {
@@ -163,10 +207,12 @@ fun EntryDialog(
                 if (onDelete != null) {
                     TextButton(onClick = onDelete) { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error) }
                 }
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+                TextButton(onClick = onDismiss) { Text(dismissLabel) }
             }
         },
     )
+
+    if (viewingImage && image != null) ScreenshotViewer(image, onClose = { viewingImage = false })
 
     when (picker) {
         Picker.DATE -> {

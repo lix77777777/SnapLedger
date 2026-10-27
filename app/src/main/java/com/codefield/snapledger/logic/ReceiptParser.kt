@@ -18,7 +18,8 @@ object ReceiptParser {
      * @param fallbackCurrency 截图里看不出货币时用的货币（比如全是英文和数字）。
      */
     fun parse(lines: List<OcrLine>, now: Long, zone: ZoneId, fallbackCurrency: Currency): ParsedReceipt {
-        val texts = lines.map { TextNormalizer.normalize(it.text) }
+        // 识别结果的行首行尾常带着竖线（表格的边框），先去掉。
+        val texts = lines.map { TextNormalizer.normalize(it.text).trim(' ', '|') }
         val all = texts.joinToString("\n")
         val hasKana = all.any { it in '぀'..'ヿ' }
         val candidates = AmountFinder.find(texts, lines.map { it.height }, documentCurrency(all, hasKana, fallbackCurrency), hasKana)
@@ -26,7 +27,8 @@ object ReceiptParser {
         val merchant = MerchantFinder.find(texts, best?.lineIndex)
         return ParsedReceipt(
             amount = best?.money,
-            amountCandidates = candidates.map { it.money }.distinct().take(MAX_CANDIDATES),
+            // 余额、积分这类扣了分的数字不给用户挑，免得看着乱。
+            amountCandidates = candidates.filter { it === best || it.score >= 0 }.map { it.money }.distinct().take(MAX_CANDIDATES),
             time = DateTimeFinder.find(texts, now, zone),
             merchant = merchant,
             category = merchant?.let(CategoryGuesser::guess) ?: CategoryGuesser.guess(all),

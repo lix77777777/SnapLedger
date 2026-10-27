@@ -6,6 +6,14 @@ package com.codefield.snapledger.model
  */
 data class OcrLine(val text: String, val top: Int = 0, val height: Int = 0)
 
+/**
+ * 文字识别直接给出的一段字和它在图上的方框（像素）。同一行两头的字（比如「결제금액」和「6,500원」）
+ * 常被识别成两段，要先按位置拼成 [OcrLine]。
+ */
+data class OcrBox(val text: String, val left: Int, val top: Int, val right: Int, val bottom: Int) {
+    val height: Int get() = bottom - top
+}
+
 /** 从截图里识别出的一笔账。找不到的部分是 null，由用户在确认对话框里补上。 */
 data class ParsedReceipt(
     /** 最可能的付款金额。 */

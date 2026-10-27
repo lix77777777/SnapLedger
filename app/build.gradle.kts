@@ -59,6 +59,11 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.work.runtime.ktx)
+    // 截图识别：模型打包在 App 里，不联网、不需要 Google Play 服务下载模型。
+    implementation(libs.mlkit.text.korean)
+    implementation(libs.mlkit.text.chinese)
+    implementation(libs.coil.compose)
+    implementation(libs.androidx.exifinterface)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

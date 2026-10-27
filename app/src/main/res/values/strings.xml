@@ -17,7 +17,7 @@
     <string name="ledger_month_count">%1$d entries</string>
     <string name="ledger_unconverted">%1$d foreign-currency entries will count once rates are available</string>
     <string name="ledger_empty_title">No entries yet</string>
-    <string name="ledger_empty_hint">Tap + to add one</string>
+    <string name="ledger_empty_hint">Share a payment screenshot to this app, or use the buttons below</string>
     <string name="add_entry">Add entry</string>
     <string name="edit_entry">Edit entry</string>
     <string name="field_amount">Amount</string>
@@ -48,4 +48,21 @@
     <string name="category_education">Study</string>
     <string name="category_travel">Travel</string>
     <string name="category_other">Other</string>
+
+    <!-- Screenshot import -->
+    <string name="import_screenshot">Scan screenshot</string>
+    <string name="add_manually">Add manually</string>
+    <string name="import_title">Check the result</string>
+    <string name="import_title_count">Check the result (%1$d/%2$d)</string>
+    <string name="import_reading">Reading the screenshot</string>
+    <string name="import_reading_count">Reading screenshot %1$d of %2$d</string>
+    <string name="import_reading_hint">Recognition runs on your phone. Nothing is uploaded.</string>
+    <string name="import_no_amount">No amount found. Please fill it in from the screenshot.</string>
+    <string name="import_candidates">Amounts in the screenshot</string>
+    <string name="import_duplicate">You may have recorded this already: %1$s</string>
+    <string name="import_skip">Skip</string>
+    <string name="msg_image_failed">Some images couldn\'t be opened and were skipped</string>
+    <string name="source_screenshot">Screenshot</string>
+    <string name="screenshot_enlarge">Screenshot, tap to enlarge</string>
+    <string name="close">Close</string>
 </resources>

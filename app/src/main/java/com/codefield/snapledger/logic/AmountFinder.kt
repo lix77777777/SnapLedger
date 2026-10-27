@@ -71,6 +71,8 @@ internal object AmountFinder {
 
         val hasMarker = prefix.isNotEmpty() || suffix.isNotEmpty()
         if (!hasMarker) {
+            // 和英文连在一起的数字是名字、型号的一部分：「GS25」「5G」。前面只有一个 W 时可能是没认出来的 ₩，不算。
+            if (wordBefore(line, numberStart) || line.getOrNull(numberEnd)?.let { it in 'A'..'Z' } == true) return null
             val next = line.drop(numberEnd).trimStart().firstOrNull()
             if (next != null && next in COUNT_SUFFIXES) return null
             // 没有逗号的长数字是订单号、卡号、电话号码。
@@ -122,6 +124,11 @@ internal object AmountFinder {
         val fraction = decimals.padEnd(digits, '0').take(digits).toLong()
         return whole * factor + fraction
     }
+
+    private fun wordBefore(line: String, start: Int): Boolean =
+        line.getOrNull(start - 1)?.isAsciiLetter() == true && line.getOrNull(start - 2)?.isAsciiLetter() == true
+
+    private fun Char.isAsciiLetter(): Boolean = this in 'a'..'z' || this in 'A'..'Z'
 
     private fun isBareAmount(line: String): Boolean = line.replace(MARKERS, "").none { it.isLetter() }
 

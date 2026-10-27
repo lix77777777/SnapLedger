@@ -17,7 +17,7 @@
     <string name="ledger_month_count">共 %1$d 笔</string>
     <string name="ledger_unconverted">另有 %1$d 笔外币，取得汇率后计入</string>
     <string name="ledger_empty_title">还没有记账</string>
-    <string name="ledger_empty_hint">点右下角的 + 记一笔</string>
+    <string name="ledger_empty_hint">付款后截个图分享给本应用，或者点右下角的按钮</string>
     <string name="add_entry">记一笔</string>
     <string name="edit_entry">修改这一笔</string>
     <string name="field_amount">金额</string>
@@ -48,4 +48,21 @@
     <string name="category_education">学习</string>
     <string name="category_travel">旅行</string>
     <string name="category_other">其他</string>
+
+    <!-- 截图记账 -->
+    <string name="import_screenshot">识别截图</string>
+    <string name="add_manually">手动记一笔</string>
+    <string name="import_title">确认识别结果</string>
+    <string name="import_title_count">确认识别结果（%1$d/%2$d）</string>
+    <string name="import_reading">正在识别截图</string>
+    <string name="import_reading_count">正在识别第 %1$d 张，共 %2$d 张</string>
+    <string name="import_reading_hint">在手机上识别，截图不会上传。</string>
+    <string name="import_no_amount">没找到金额，请对照截图填写。</string>
+    <string name="import_candidates">截图里的金额</string>
+    <string name="import_duplicate">可能已经记过：%1$s</string>
+    <string name="import_skip">跳过</string>
+    <string name="msg_image_failed">有图片打不开，已跳过</string>
+    <string name="source_screenshot">截图</string>
+    <string name="screenshot_enlarge">截图，点一下放大</string>
+    <string name="close">关闭</string>
 </resources>
