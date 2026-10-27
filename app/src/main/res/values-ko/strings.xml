@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">캡처 가계부</string>
+
+    <!-- 공통 -->
+    <string name="coming_soon">준비 중</string>
+    <string name="back">뒤로</string>
+
+    <!-- 하단 메뉴와 화면 제목 -->
+    <string name="tab_ledger">가계부</string>
+    <string name="tab_stats">통계</string>
+    <string name="tab_review">돌아보기</string>
+    <string name="tab_map">지도</string>
+    <string name="action_settings">설정</string>
+</resources>

@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">SnapLedger</string>
+
+    <!-- 通用 -->
+    <string name="coming_soon">Coming soon</string>
+    <string name="back">Back</string>
+
+    <!-- 底部菜单和页面标题 -->
+    <string name="tab_ledger">Ledger</string>
+    <string name="tab_stats">Stats</string>
+    <string name="tab_review">Review</string>
+    <string name="tab_map">Map</string>
+    <string name="action_settings">Settings</string>
+</resources>

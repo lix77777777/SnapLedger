@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">截图记账</string>
+
+    <!-- 通用 -->
+    <string name="coming_soon">开发中</string>
+    <string name="back">返回</string>
+
+    <!-- 底部菜单和页面标题 -->
+    <string name="tab_ledger">账本</string>
+    <string name="tab_stats">统计</string>
+    <string name="tab_review">回顾</string>
+    <string name="tab_map">地图</string>
+    <string name="action_settings">设置</string>
+</resources>
