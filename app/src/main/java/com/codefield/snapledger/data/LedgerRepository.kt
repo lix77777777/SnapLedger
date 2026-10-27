@@ -23,6 +23,11 @@ class LedgerRepository(
 
     suspend fun update(entry: Entry) = entries.update(EntryMapper.toEntity(entry))
 
+    /** 撤销删除：用原来的编号放回去。 */
+    suspend fun restore(entry: Entry) {
+        entries.insert(EntryMapper.toEntity(entry))
+    }
+
     suspend fun delete(id: Long) = entries.delete(id)
 
     /** 存下来的各天汇率，按日期从早到晚。 */

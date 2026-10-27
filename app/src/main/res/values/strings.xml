@@ -11,4 +11,41 @@
     <string name="tab_review">Review</string>
     <string name="tab_map">Map</string>
     <string name="action_settings">Settings</string>
+
+    <!-- Ledger and entry dialog -->
+    <string name="ledger_month_total">This month %1$s</string>
+    <string name="ledger_month_count">%1$d entries</string>
+    <string name="ledger_unconverted">%1$d foreign-currency entries will count once rates are available</string>
+    <string name="ledger_empty_title">No entries yet</string>
+    <string name="ledger_empty_hint">Tap + to add one</string>
+    <string name="add_entry">Add entry</string>
+    <string name="edit_entry">Edit entry</string>
+    <string name="field_amount">Amount</string>
+    <string name="field_merchant">Merchant</string>
+    <string name="field_category">Category</string>
+    <string name="field_date">Date</string>
+    <string name="field_time">Time</string>
+    <string name="field_note">Note</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="ok">OK</string>
+    <string name="undo">Undo</string>
+    <string name="delete_title">Delete this entry?</string>
+    <string name="delete_message">You can undo right after deleting.</string>
+    <string name="msg_saved">Saved</string>
+    <string name="msg_deleted">Deleted</string>
+    <string name="error_amount">Enter an amount above 0</string>
+    <string name="date_header_pattern">EEE, MMM d</string>
+    <string name="category_food">Food</string>
+    <string name="category_cafe">Cafe</string>
+    <string name="category_grocery">Groceries</string>
+    <string name="category_transport">Transport</string>
+    <string name="category_shopping">Shopping</string>
+    <string name="category_housing">Housing</string>
+    <string name="category_entertainment">Fun</string>
+    <string name="category_health">Health</string>
+    <string name="category_education">Study</string>
+    <string name="category_travel">Travel</string>
+    <string name="category_other">Other</string>
 </resources>

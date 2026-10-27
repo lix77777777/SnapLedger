@@ -34,8 +34,9 @@ class LedgerRepositoryTest {
 
         override suspend fun get(id: Long) = rows.value.firstOrNull { it.id == id }
 
+        /** 和 Room 一样：编号是 0 时自动分配，否则用给定的编号。 */
         override suspend fun insert(entity: EntryEntity): Long {
-            val id = nextId++
+            val id = if (entity.id != 0L) entity.id else nextId++
             rows.value = rows.value + entity.copy(id = id)
             return id
         }
@@ -85,6 +86,15 @@ class LedgerRepositoryTest {
         assertEquals("친구랑", repository.get(id)?.note)
         repository.delete(id)
         assertNull(repository.get(id))
+    }
+
+    @Test
+    fun restore_putsTheEntryBackWithItsId() = runBlocking {
+        val id = repository.add(entry(time = 100))
+        val deleted = repository.get(id)!!
+        repository.delete(id)
+        repository.restore(deleted)
+        assertEquals(deleted, repository.get(id))
     }
 
     @Test
