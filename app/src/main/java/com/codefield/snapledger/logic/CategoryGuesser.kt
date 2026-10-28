@@ -21,7 +21,8 @@ object CategoryGuesser {
         ),
         Category.GROCERY to listOf(
             "편의점", "gs25", "cu", "세븐일레븐", "7-eleven", "7eleven", "이마트24", "emart24", "이마트", "emart",
-            "홈플러스", "롯데마트", "다이소", "daiso", "便利店", "超市", "盒马", "全家", "familymart", "罗森", "lawson",
+            "홈플러스", "롯데마트", "gs더프레시", "지에스더프레시", "다이소", "daiso", "便利店", "超市", "盒马", "全家",
+            "familymart", "罗森", "lawson",
         ),
         Category.TRANSPORT to listOf(
             "택시", "카카오t", "티머니", "t-money", "tmoney", "지하철", "버스", "코레일", "korail", "srt", "ktx", "주유",

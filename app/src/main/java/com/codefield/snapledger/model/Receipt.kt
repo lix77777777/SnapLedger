@@ -24,4 +24,9 @@ data class ParsedReceipt(
     val time: Long?,
     val merchant: String?,
     val category: Category?,
+    /** 截图是账单、流水这类列表时，里面的每一笔支出（至少两笔，从上到下排），上面几项是第一笔的；不是列表时是空的。 */
+    val items: List<ParsedItem> = emptyList(),
 )
+
+/** 列表截图里的一笔支出。找不到的部分是 null。 */
+data class ParsedItem(val amount: Money, val time: Long?, val merchant: String?, val category: Category?)

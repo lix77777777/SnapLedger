@@ -41,6 +41,10 @@ class LedgerRepositoryTest {
             return id
         }
 
+        override suspend fun insertAll(entities: List<EntryEntity>) {
+            rows.value = rows.value + entities.map { it.copy(id = nextId++) }
+        }
+
         override suspend fun update(entity: EntryEntity) {
             rows.value = rows.value.map { if (it.id == entity.id) entity else it }
         }
@@ -76,6 +80,12 @@ class LedgerRepositoryTest {
         assertEquals(1L, first)
         assertEquals(2L, second)
         assertEquals(listOf("B", "C", "A"), repository.observeEntries().first().map { it.merchant })
+    }
+
+    @Test
+    fun addAll_givesEveryEntryANewId() = runBlocking {
+        repository.addAll(listOf(entry(time = 100, merchant = "A"), entry(time = 200, merchant = "B")))
+        assertEquals(listOf(2L to "B", 1L to "A"), repository.observeEntries().first().map { it.id to it.merchant })
     }
 
     @Test

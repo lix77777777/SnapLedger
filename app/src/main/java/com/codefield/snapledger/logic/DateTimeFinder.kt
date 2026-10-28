@@ -16,11 +16,16 @@ internal object DateTimeFinder {
     private val SHORT_DATE = Regex("""(?<![\d.])(\d{1,2})\s*(?:[월月]\s*(\d{1,2})\s*[일日号]?|/(\d{1,2}))(?![\d/])""")
     private val TIME = Regex("""(오전|오후|上午|下午|AM|PM|am|pm)?\s*(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\s*(AM|PM|am|pm))?""")
     private val PHONE = Regex("""\d{2,4}-\d{3,4}-\d{4}""")
+    /** 状态栏的时钟只到分钟，后面跟着信号、电量。 */
+    private val STATUS_BAR = Regex("""^\d{1,2}:\d{2}(?![:\d])""")
 
     /** 有这些词的行优先当作付款时间（截图里可能还有别的日期）。 */
     private val DATE_KEYS = listOf("일시", "거래일", "결제일", "승인일", "이용일", "时间", "日期", "date", "time")
     private val AFTERNOON = setOf("오후", "下午", "pm")
     private val MORNING = setOf("오전", "上午", "am")
+
+    /** 截图最上面的状态栏（「21:35 LTE 72」）：时间是截图的时间，后面的数字是电量，都不是付款的信息。 */
+    fun isStatusBar(line: String, index: Int): Boolean = index == 0 && STATUS_BAR.containsMatchIn(line.trimStart())
 
     /** 这一行里日期、时间、电话号码所在的位置。找金额时要跳过这些地方。 */
     fun spans(line: String): List<IntRange> =
@@ -37,6 +42,31 @@ internal object DateTimeFinder {
             return LocalDateTime.of(date, time).atZone(zone).toInstant().toEpochMilli()
         }
         return null
+    }
+
+    /**
+     * 列表截图里一笔的时间。先在这一笔自己的几行（block）里找；没有日期时往上找最近的日期（流水按天分组，日期写在每组上面）；
+     * 只有时间没有日期时，算截图那天（now）的，比 now 还晚就是前一天的。什么都没有时返回 null。
+     */
+    fun findInBlock(lines: List<String>, block: IntRange, now: Long, zone: ZoneId): Long? {
+        val reference = Instant.ofEpochMilli(now).atZone(zone).toLocalDateTime()
+        val today = reference.toLocalDate()
+        fun dateIn(i: Int) = if (isStatusBar(lines[i], i)) null else fullDate(lines[i]) ?: shortDate(lines[i], today)
+        var date: LocalDate? = null
+        var time: LocalTime? = null
+        for (i in block) {
+            if (isStatusBar(lines[i], i)) continue
+            val found = dateIn(i)
+            if (date == null) date = found?.first
+            if (time == null) time = timeIn(found?.let { lines[i].substring(it.second) } ?: lines[i])
+        }
+        if (date == null) date = (block.first - 1 downTo 0).firstNotNullOfOrNull { dateIn(it)?.first }
+        val result = when {
+            date != null -> LocalDateTime.of(date, time ?: LocalTime.NOON)
+            time != null -> LocalDateTime.of(today, time).let { if (it.isAfter(reference)) it.minusDays(1) else it }
+            else -> return null
+        }
+        return result.atZone(zone).toInstant().toEpochMilli()
     }
 
     private fun fullDate(line: String): Pair<LocalDate, Int>? {

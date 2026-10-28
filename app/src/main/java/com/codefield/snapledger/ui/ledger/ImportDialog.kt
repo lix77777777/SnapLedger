@@ -30,7 +30,8 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
 /**
- * 截图记账的对话框，一次显示队列里的第一张：还在识别时显示进度，识别好了显示填好的「记一笔」对话框。
+ * 截图记账的对话框，一次显示队列里的第一张：还在识别时显示进度，识别好了显示填好的「记一笔」对话框；
+ * 截图是账单、流水这类列表时，显示勾选列表（[ImportListDialog]）。
  * 「跳过」和返回键都是不记这一张；点对话框外面不会关，免得一不小心把识别结果丢了。
  */
 @Composable
@@ -41,11 +42,16 @@ fun ImportDialog(
     zone: ZoneId,
     imageFor: (String) -> File,
     onConfirm: (Entry) -> Unit,
+    onConfirmItems: (List<Entry>) -> Unit,
+    onSelectItems: (Set<Int>) -> Unit,
+    onEditItem: (Int, Entry) -> Unit,
     onSkip: () -> Unit,
 ) {
     val shot = queue.current ?: return
     val draft = shot.draft
     val several = queue.total > 1
+    val title = if (several) stringResource(R.string.import_title_count, queue.position, queue.total)
+    else stringResource(R.string.import_title)
 
     if (draft == null) {
         AlertDialog(
@@ -68,11 +74,29 @@ fun ImportDialog(
         return
     }
 
+    // 换到下一张时整个对话框重新开始，不然上一张输入的内容会留在框里。
+    if (shot.items.size >= 2) {
+        key(shot.image) {
+            ImportListDialog(
+                shot = shot,
+                title = title,
+                entries = entries,
+                defaultCurrency = defaultCurrency,
+                zone = zone,
+                image = imageFor(shot.image),
+                onSelect = onSelectItems,
+                onEdit = onEditItem,
+                onConfirm = onConfirmItems,
+                onSkip = onSkip,
+            )
+        }
+        return
+    }
+
     val duplicate = remember(entries, draft) { DuplicateFinder.find(entries, draft, zone) }
     val noAmount = stringResource(R.string.import_no_amount).takeIf { draft.amount.minor == 0L }
     val similar = duplicate?.let { stringResource(R.string.import_duplicate, describe(it, zone)) }
 
-    // 换到下一张时整个对话框重新开始，不然上一张输入的内容会留在框里。
     key(shot.image) {
         EntryDialog(
             initial = draft,
@@ -81,8 +105,7 @@ fun ImportDialog(
             onSave = onConfirm,
             onDelete = null,
             onDismiss = onSkip,
-            title = if (several) stringResource(R.string.import_title_count, queue.position, queue.total)
-            else stringResource(R.string.import_title),
+            title = title,
             image = imageFor(shot.image),
             candidates = shot.candidates,
             notices = listOfNotNull(noAmount, similar),
@@ -95,8 +118,14 @@ fun ImportDialog(
 /** 「2026年10月28日 14:32 · Starbucks · ₩6,500」，用来说明可能重复的是哪一笔。 */
 @Composable
 private fun describe(entry: Entry, zone: ZoneId): String {
-    val locale = LocalConfiguration.current.locales[0]
-    val format = remember(locale) { DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).withLocale(locale) }
+    val format = rememberDateTimeFormat()
     val name = entry.merchant.ifBlank { stringResource(categoryName(entry.category)) }
     return listOf(Instant.ofEpochMilli(entry.time).atZone(zone).format(format), name, formatMoney(entry.amount)).joinToString(" · ")
+}
+
+/** 按界面语言显示日期和时间：「2026年10月28日 14:32」「2026. 10. 28. 오후 2:32」。 */
+@Composable
+internal fun rememberDateTimeFormat(): DateTimeFormatter {
+    val locale = LocalConfiguration.current.locales[0]
+    return remember(locale) { DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).withLocale(locale) }
 }

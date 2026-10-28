@@ -21,6 +21,9 @@ class LedgerRepository(
     /** 新记一笔，返回它的编号。 */
     suspend fun add(entry: Entry): Long = entries.insert(EntryMapper.toEntity(entry.copy(id = 0)))
 
+    /** 一次记好几笔（列表截图），账本只刷新一次。 */
+    suspend fun addAll(list: List<Entry>) = entries.insertAll(list.map { EntryMapper.toEntity(it.copy(id = 0)) })
+
     suspend fun update(entry: Entry) = entries.update(EntryMapper.toEntity(entry))
 
     /** 撤销删除：用原来的编号放回去。 */

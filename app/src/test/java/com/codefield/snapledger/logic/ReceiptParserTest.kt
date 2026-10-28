@@ -4,6 +4,7 @@ import com.codefield.snapledger.model.Category
 import com.codefield.snapledger.model.Currency
 import com.codefield.snapledger.model.Money
 import com.codefield.snapledger.model.OcrLine
+import com.codefield.snapledger.model.ParsedItem
 import com.codefield.snapledger.model.ParsedReceipt
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -121,6 +122,32 @@ class ReceiptParserTest {
     fun dateWithoutYear_inTheFuture_isLastYear() {
         val r = parse("12/30 18:00", "5,000원", now = at(2026, 1, 2, 9, 0))
         assertEquals(at(2025, 12, 30, 18, 0), r.time)
+    }
+
+    /** 两条银行卡短信截在一张图里：两条之间空得多，每条的店名、时间归那一条；打了码的人名不当商家。 */
+    @Test
+    fun twoCardMessages_areTwoItems() {
+        val first = listOf("[Web발신]", "신한카드(1234)승인", "홍*동", "6,500원 일시불", "10/28 12:31", "스타벅스 강남점", "누적1,234,560원")
+        val second = listOf("[Web발신]", "신한카드(1234)승인", "홍*동", "12,000원 일시불", "10/28 18:05", "GS25 역삼점", "누적1,246,560원")
+        // 每行高 30、行距 10；两条短信之间空 130。
+        val lines = first.mapIndexed { i, text -> OcrLine(text, top = 200 + i * 40, height = 30) } +
+            second.mapIndexed { i, text -> OcrLine(text, top = 600 + i * 40, height = 30) }
+        val r = ReceiptParser.parse(lines, now, seoul, Currency.KRW)
+        assertEquals(
+            listOf(
+                ParsedItem(Money(6500, Currency.KRW), at(2026, 10, 28, 12, 31), "스타벅스 강남점", Category.CAFE),
+                ParsedItem(Money(12000, Currency.KRW), at(2026, 10, 28, 18, 5), "GS25 역삼점", Category.GROCERY),
+            ),
+            r.items,
+        )
+    }
+
+    /** 付款详情页：上面大字的金额，下面明细里又写了一遍（字小），不是两笔。 */
+    @Test
+    fun detailPageShowingTheAmountTwice_isNotAList() {
+        val r = parse("GS25 역삼점", "-3,800원", "거래 일시 10월 28일 오후 12:34", "결제 금액 -3,800원", heights = listOf(44, 96, 36, 36))
+        assertTrue(r.items.isEmpty())
+        assertEquals(Money(3800, Currency.KRW), r.amount)
     }
 
     @Test

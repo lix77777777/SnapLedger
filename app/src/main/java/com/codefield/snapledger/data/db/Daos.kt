@@ -19,6 +19,9 @@ interface EntryDao {
     @Insert
     suspend fun insert(entity: EntryEntity): Long
 
+    @Insert
+    suspend fun insertAll(entities: List<EntryEntity>)
+
     @Update
     suspend fun update(entity: EntryEntity)
 

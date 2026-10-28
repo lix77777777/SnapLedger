@@ -65,4 +65,10 @@
     <string name="source_screenshot">Screenshot</string>
     <string name="screenshot_enlarge">Screenshot, tap to enlarge</string>
     <string name="close">Close</string>
+
+    <!-- List screenshots (several payments in one) -->
+    <string name="import_list_hint">Found %1$d expenses. Check the ones to save. Tap one to edit it.</string>
+    <string name="import_list_save">Save %1$d</string>
+    <string name="import_list_duplicate">May be recorded already</string>
+    <string name="msg_saved_several">Saved %1$d entries</string>
 </resources>

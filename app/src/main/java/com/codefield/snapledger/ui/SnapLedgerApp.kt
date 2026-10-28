@@ -107,6 +107,8 @@ fun SnapLedgerApp(viewModel: LedgerViewModel = viewModel(factory = LedgerViewMod
             scope.launch {
                 when (message) {
                     LedgerMessage.Saved -> snackbarHostState.showSnackbar(resources.getString(R.string.msg_saved))
+                    is LedgerMessage.SavedSeveral ->
+                        snackbarHostState.showSnackbar(resources.getString(R.string.msg_saved_several, message.count))
                     is LedgerMessage.Deleted -> {
                         val result = snackbarHostState.showSnackbar(
                             message = resources.getString(R.string.msg_deleted),
@@ -172,6 +174,9 @@ fun SnapLedgerApp(viewModel: LedgerViewModel = viewModel(factory = LedgerViewMod
         zone = zone,
         imageFor = viewModel::imageFile,
         onConfirm = viewModel::confirmImport,
+        onConfirmItems = viewModel::confirmImportItems,
+        onSelectItems = viewModel::selectImportItems,
+        onEditItem = viewModel::editImportItem,
         onSkip = viewModel::skipImport,
     )
 }

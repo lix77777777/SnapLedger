@@ -36,6 +36,8 @@ import kotlinx.coroutines.launch
 /** 只显示一次的提示。删除的提示带着那一笔，方便撤销。 */
 sealed interface LedgerMessage {
     data object Saved : LedgerMessage
+    /** 列表截图一次记了好几笔。 */
+    data class SavedSeveral(val count: Int) : LedgerMessage
     data class Deleted(val entry: Entry) : LedgerMessage
     /** 选的或分享过来的图片里有打不开的，已经跳过。 */
     data object ImageFailed : LedgerMessage
@@ -50,6 +52,10 @@ data class PendingShot(
     val takenAt: Long?,
     val draft: Entry? = null,
     val candidates: List<Money> = emptyList(),
+    /** 列表截图（账单、流水）里的每一笔支出，至少两笔；不是列表时是空的，确认 draft。 */
+    val items: List<Entry> = emptyList(),
+    /** 列表里勾上的那几笔（items 的下标）。null 表示用户还没动过，这时默认勾上没记过的。 */
+    val selected: Set<Int>? = null,
 )
 
 /** 截图记账的队列：一次选了或分享了好几张时，一张一张确认。done 是这一批已经处理完的张数。 */
@@ -141,6 +147,24 @@ class LedgerViewModel(
         save(entry)
     }
 
+    /** 列表截图：勾上、取消了某几笔。 */
+    fun selectImportItems(selected: Set<Int>) = updateCurrent { it.copy(selected = selected) }
+
+    /** 列表截图：改了其中一笔。 */
+    fun editImportItem(index: Int, entry: Entry) = updateCurrent { shot ->
+        shot.copy(items = shot.items.mapIndexed { i, item -> if (i == index) entry else item })
+    }
+
+    /** 列表截图：记下勾上的那几笔，换下一张。 */
+    fun confirmImportItems(items: List<Entry>) {
+        if (_imports.value.current == null || items.isEmpty()) return
+        popImport()
+        viewModelScope.launch {
+            repository.addAll(items)
+            _messages.emit(LedgerMessage.SavedSeveral(items.size))
+        }
+    }
+
     /** 跳过这一张：不记账，删掉存下的副本。 */
     fun skipImport() {
         val shot = _imports.value.current ?: return
@@ -154,25 +178,36 @@ class LedgerViewModel(
         reading = viewModelScope.launch {
             while (true) {
                 val shot = _imports.value.shots.firstOrNull { it.draft == null } ?: break
-                val parsed = container.screenshotReader.read(shot.image, homeCurrency.value, System.currentTimeMillis(), zone)
-                val draft = draftOf(shot, parsed)
+                // 截图里只写了时间、没写日期时，按截图那天算；不知道截图时间时按今天。
+                val takenAt = shot.takenAt ?: System.currentTimeMillis()
+                val read = recognized(shot, container.screenshotReader.read(shot.image, homeCurrency.value, takenAt, zone), takenAt)
                 // 识别途中用户可能已经跳过了这一张，那就什么也不改。
-                updateImports { queue ->
-                    queue.copy(shots = queue.shots.map { if (it.image == shot.image) it.copy(draft = draft, candidates = parsed.amountCandidates) else it })
-                }
+                updateImports { queue -> queue.copy(shots = queue.shots.map { if (it.image == shot.image) read else it }) }
             }
         }
     }
 
-    /** 截图里没写时间时，用截图的时间；也看不出来时用现在。 */
-    private fun draftOf(shot: PendingShot, parsed: ParsedReceipt) = Entry(
-        amount = parsed.amount ?: Money(0, homeCurrency.value),
-        category = parsed.category ?: Category.OTHER,
-        merchant = parsed.merchant.orEmpty(),
-        time = parsed.time ?: shot.takenAt ?: System.currentTimeMillis(),
-        source = Source.SCREENSHOT,
-        imagePath = shot.image,
-    )
+    /** 识别结果填成待确认的账。截图里没写时间时，用截图的时间（不知道时是现在）。 */
+    private fun recognized(shot: PendingShot, parsed: ParsedReceipt, takenAt: Long): PendingShot {
+        fun entry(amount: Money?, category: Category?, merchant: String?, time: Long?) = Entry(
+            amount = amount ?: Money(0, homeCurrency.value),
+            category = category ?: Category.OTHER,
+            merchant = merchant.orEmpty(),
+            time = time ?: takenAt,
+            source = Source.SCREENSHOT,
+            imagePath = shot.image,
+        )
+        return shot.copy(
+            draft = entry(parsed.amount, parsed.category, parsed.merchant, parsed.time),
+            candidates = parsed.amountCandidates,
+            items = parsed.items.map { entry(it.amount, it.category, it.merchant, it.time) },
+        )
+    }
+
+    private fun updateCurrent(change: (PendingShot) -> PendingShot) = updateImports { queue ->
+        val shot = queue.current ?: return@updateImports queue
+        queue.copy(shots = listOf(change(shot)) + queue.shots.drop(1))
+    }
 
     private fun popImport() = updateImports { queue ->
         val rest = queue.shots.drop(1)
