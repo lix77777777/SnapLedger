@@ -5,6 +5,8 @@ import android.content.pm.ApplicationInfo
 import com.codefield.snapledger.data.LedgerRepository
 import com.codefield.snapledger.data.SettingsStore
 import com.codefield.snapledger.data.db.LedgerDatabase
+import com.codefield.snapledger.remote.FrankfurterApi
+import com.codefield.snapledger.system.RateUpdater
 import com.codefield.snapledger.system.ScreenshotReader
 import com.codefield.snapledger.system.ScreenshotStore
 import com.codefield.snapledger.system.TextScanner
@@ -16,6 +18,7 @@ class AppContainer(context: Context) {
     private val database by lazy { LedgerDatabase.create(appContext) }
     val repository: LedgerRepository by lazy { LedgerRepository(database.entryDao(), database.rateDao()) }
     val settings: SettingsStore by lazy { SettingsStore(appContext) }
+    val rateUpdater: RateUpdater by lazy { RateUpdater(FrankfurterApi(), repository) }
     val screenshots: ScreenshotStore by lazy { ScreenshotStore(appContext) }
     val screenshotReader: ScreenshotReader by lazy {
         val debuggable = appContext.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0

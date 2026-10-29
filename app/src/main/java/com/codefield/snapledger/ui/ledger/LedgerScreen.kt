@@ -34,6 +34,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.codefield.snapledger.R
+import com.codefield.snapledger.logic.CurrencyConverter
+import com.codefield.snapledger.logic.RateTable
 import com.codefield.snapledger.model.Currency
 import com.codefield.snapledger.model.Entry
 import com.codefield.snapledger.model.Money
@@ -59,6 +61,7 @@ fun LedgerScreen(
     entries: List<Entry>?,
     summary: MonthSummary?,
     homeCurrency: Currency,
+    rates: RateTable,
     zone: ZoneId,
     dialogFor: Long?,
     onDialogFor: (Long?) -> Unit,
@@ -90,7 +93,12 @@ fun LedgerScreen(
                 entries.isEmpty() -> item { EmptyState() }
                 else -> entries.groupBy { Instant.ofEpochMilli(it.time).atZone(zone).toLocalDate() }.forEach { (date, dayEntries) ->
                     stickyHeader(key = "day-$date") { DayHeader(date.format(dayFormat)) }
-                    items(dayEntries, key = { it.id }) { entry -> EntryRow(entry, zone) { onDialogFor(entry.id) } }
+                    items(dayEntries, key = { it.id }) { entry ->
+                        // 外币下面小字写上换算成主货币是多少（按付款那天的汇率）。
+                        val converted = if (entry.amount.currency == homeCurrency) null
+                        else CurrencyConverter.convert(entry.amount, homeCurrency, rates.ratesFor(date))
+                        EntryRow(entry, converted, zone) { onDialogFor(entry.id) }
+                    }
                 }
             }
         }
@@ -163,7 +171,7 @@ private fun DayHeader(text: String) {
 }
 
 @Composable
-private fun EntryRow(entry: Entry, zone: ZoneId, onClick: () -> Unit) {
+private fun EntryRow(entry: Entry, converted: Money?, zone: ZoneId, onClick: () -> Unit) {
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             CategoryBadge(entry.category)
@@ -185,7 +193,16 @@ private fun EntryRow(entry: Entry, zone: ZoneId, onClick: () -> Unit) {
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            Text(formatMoney(entry.amount), style = MaterialTheme.typography.titleMedium)
+            Column(horizontalAlignment = Alignment.End) {
+                Text(formatMoney(entry.amount), style = MaterialTheme.typography.titleMedium)
+                if (converted != null) {
+                    Text(
+                        "≈ " + formatMoney(converted),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
         }
     }
 }

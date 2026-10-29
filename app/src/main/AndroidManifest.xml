@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- 只用来下载汇率；截图识别不联网。 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".LedgerApplication"
         android:allowBackup="true"

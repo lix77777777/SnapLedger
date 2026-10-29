@@ -3,6 +3,7 @@ package com.codefield.snapledger.ui.common
 import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.Color
 import com.codefield.snapledger.R
+import com.codefield.snapledger.logic.RateQuote
 import com.codefield.snapledger.model.Category
 import com.codefield.snapledger.model.Currency
 import com.codefield.snapledger.model.Money
@@ -26,6 +27,22 @@ fun currencySymbol(currency: Currency): String = when (currency) {
     Currency.USD -> "$"
     Currency.JPY -> "JP¥"
     Currency.EUR -> "€"
+}
+
+/** 汇率显示成「1 CNY = ₩201.08」「1,000 KRW = ¥4.97」。 */
+fun formatQuote(quote: RateQuote, from: Currency, to: Currency): String {
+    val symbols = DecimalFormatSymbols(Locale.US)
+    val units = DecimalFormat("#,##0", symbols).format(quote.units)
+    return "$units ${from.name} = ${currencySymbol(to)}${DecimalFormat("#,##0.00", symbols).format(quote.value)}"
+}
+
+@StringRes
+fun currencyName(currency: Currency): Int = when (currency) {
+    Currency.KRW -> R.string.currency_krw
+    Currency.CNY -> R.string.currency_cny
+    Currency.USD -> R.string.currency_usd
+    Currency.JPY -> R.string.currency_jpy
+    Currency.EUR -> R.string.currency_eur
 }
 
 @StringRes

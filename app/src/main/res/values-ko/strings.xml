@@ -71,4 +71,21 @@
     <string name="import_list_save">%1$d건 기록</string>
     <string name="import_list_duplicate">이미 기록했을 수 있어요</string>
     <string name="msg_saved_several">%1$d건을 기록했어요</string>
+
+    <!-- 설정: 기본 통화와 환율 -->
+    <string name="settings_home_currency">기본 통화</string>
+    <string name="settings_home_currency_hint">통계와 회고는 이 통화로 환산하고, 직접 기록할 때도 기본으로 사용해요.</string>
+    <string name="currency_krw">원</string>
+    <string name="currency_cny">위안</string>
+    <string name="currency_usd">달러</string>
+    <string name="currency_jpy">엔</string>
+    <string name="currency_eur">유로</string>
+    <string name="settings_rates">환율</string>
+    <string name="rates_date">최신 환율: %1$s</string>
+    <string name="rates_none">아직 환율이 없어요. 인터넷에 연결되면 자동으로 받아요.</string>
+    <string name="rates_updating">환율을 업데이트하는 중…</string>
+    <string name="rates_failed">업데이트하지 못했어요(네트워크를 확인하세요). 저장된 환율을 사용해요.</string>
+    <string name="rates_update_now">지금 업데이트</string>
+    <string name="rates_rule">외화는 결제한 날의 환율로 환산해요. 주말·공휴일에는 직전 영업일 환율을 써요.</string>
+    <string name="rates_source">유럽중앙은행이 영업일마다 발표하는 기준 환율을 Frankfurter에서 받아요. 오프라인일 때는 마지막으로 받은 환율을 써요.</string>
 </resources>

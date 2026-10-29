@@ -71,4 +71,21 @@
     <string name="import_list_save">Save %1$d</string>
     <string name="import_list_duplicate">May be recorded already</string>
     <string name="msg_saved_several">Saved %1$d entries</string>
+
+    <!-- Settings: home currency and exchange rates -->
+    <string name="settings_home_currency">Home currency</string>
+    <string name="settings_home_currency_hint">Stats and reviews are shown in this currency, and new entries start in it.</string>
+    <string name="currency_krw">Korean won</string>
+    <string name="currency_cny">Chinese yuan</string>
+    <string name="currency_usd">US dollar</string>
+    <string name="currency_jpy">Japanese yen</string>
+    <string name="currency_eur">Euro</string>
+    <string name="settings_rates">Exchange rates</string>
+    <string name="rates_date">Latest rates: %1$s</string>
+    <string name="rates_none">No rates yet. They download automatically when you\'re online.</string>
+    <string name="rates_updating">Updating rates…</string>
+    <string name="rates_failed">Couldn\'t update (check your connection). Using the saved rates.</string>
+    <string name="rates_update_now">Update now</string>
+    <string name="rates_rule">Each payment uses that day\'s rate. Weekends and holidays use the last working day before.</string>
+    <string name="rates_source">Reference rates published by the European Central Bank every working day, via Frankfurter. Offline, the last downloaded rates are used.</string>
 </resources>

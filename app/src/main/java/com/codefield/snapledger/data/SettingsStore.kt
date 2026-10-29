@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.core.content.edit
 import com.codefield.snapledger.model.Currency
 
-/** 玩家设置，用 SharedPreferences 保存，和账目分开。 */
+/** 用户设置，用 SharedPreferences 保存，和账目分开。 */
 class SettingsStore(context: Context) {
 
     private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -15,7 +15,13 @@ class SettingsStore(context: Context) {
             ?: Currency.KRW
         set(value) = prefs.edit { putString(KEY_HOME_CURRENCY, value.name) }
 
+    /** 上次成功检查有没有新汇率的时间（毫秒），从没检查过是 0。 */
+    var ratesCheckedAt: Long
+        get() = prefs.getLong(KEY_RATES_CHECKED_AT, 0L)
+        set(value) = prefs.edit { putLong(KEY_RATES_CHECKED_AT, value) }
+
     private companion object {
         const val KEY_HOME_CURRENCY = "home_currency"
+        const val KEY_RATES_CHECKED_AT = "rates_checked_at"
     }
 }

@@ -18,6 +18,8 @@ import com.codefield.snapledger.model.Money
 import com.codefield.snapledger.model.ParsedReceipt
 import com.codefield.snapledger.model.Source
 import java.io.File
+import java.io.IOException
+import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -58,6 +60,9 @@ data class PendingShot(
     val selected: Set<Int>? = null,
 )
 
+/** 汇率下载的状态，显示在设置里。FAILED 是上一次没能连上网络（已经存下的汇率照常用）。 */
+enum class RateStatus { IDLE, UPDATING, FAILED }
+
 /** 截图记账的队列：一次选了或分享了好几张时，一张一张确认。done 是这一批已经处理完的张数。 */
 data class ImportQueue(val shots: List<PendingShot> = emptyList(), val done: Int = 0) {
     val current: PendingShot? get() = shots.firstOrNull()
@@ -85,6 +90,10 @@ class LedgerViewModel(
     private val _homeCurrency = MutableStateFlow(container.settings.homeCurrency)
     val homeCurrency: StateFlow<Currency> = _homeCurrency.asStateFlow()
 
+    private val _rateStatus = MutableStateFlow(RateStatus.IDLE)
+    val rateStatus: StateFlow<RateStatus> = _rateStatus.asStateFlow()
+    private var updatingRates: Job? = null
+
     private val _messages = MutableSharedFlow<LedgerMessage>(extraBufferCapacity = 8)
     val messages: SharedFlow<LedgerMessage> = _messages.asSharedFlow()
 
@@ -106,6 +115,35 @@ class LedgerViewModel(
         viewModelScope.launch {
             if (entry.id == 0L) repository.add(entry) else repository.update(entry)
             _messages.emit(LedgerMessage.Saved)
+            // 记了比已有汇率更早的账时，补上那几天的汇率。
+            refreshRates()
+        }
+    }
+
+    fun setHomeCurrency(currency: Currency) {
+        container.settings.homeCurrency = currency
+        _homeCurrency.value = currency
+    }
+
+    /**
+     * 补上缺少的汇率。启动、回到前台、记了账之后调用；隔 [RATE_CHECK_INTERVAL_MS] 才看一次有没有新汇率。
+     * force 是在设置里点了「立即更新」：不管上次什么时候看过，都看一次。
+     */
+    fun refreshRates(force: Boolean = false) {
+        if (updatingRates?.isActive == true) return
+        updatingRates = viewModelScope.launch {
+            val settings = container.settings
+            val now = System.currentTimeMillis()
+            val checkNewer = force || now - settings.ratesCheckedAt >= RATE_CHECK_INTERVAL_MS
+            _rateStatus.value = RateStatus.UPDATING
+            _rateStatus.value = try {
+                // 直接查数据库，刚记下的那笔也算在里面。
+                container.rateUpdater.update(repository.observeEntries().first(), LocalDate.now(zone), zone, checkNewer)
+                if (checkNewer) settings.ratesCheckedAt = now
+                RateStatus.IDLE
+            } catch (e: IOException) {
+                RateStatus.FAILED
+            }
         }
     }
 
@@ -162,6 +200,7 @@ class LedgerViewModel(
         viewModelScope.launch {
             repository.addAll(items)
             _messages.emit(LedgerMessage.SavedSeveral(items.size))
+            refreshRates()
         }
     }
 
@@ -237,6 +276,9 @@ class LedgerViewModel(
         private const val KEY_TIMES = "import_times"
         private const val KEY_DONE = "import_done"
         private const val NO_TIME = -1L
+
+        /** 汇率每个工作日只更新一次，看得太勤没有用。 */
+        private const val RATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000L
 
         val Factory = viewModelFactory {
             initializer {

@@ -34,6 +34,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -83,9 +84,16 @@ fun SnapLedgerApp(viewModel: LedgerViewModel = viewModel(factory = LedgerViewMod
     val entries by viewModel.entries.collectAsStateWithLifecycle()
     val rates by viewModel.rates.collectAsStateWithLifecycle()
     val homeCurrency by viewModel.homeCurrency.collectAsStateWithLifecycle()
+    val rateStatus by viewModel.rateStatus.collectAsStateWithLifecycle()
     val zone = remember { ZoneId.systemDefault() }
     val summary = remember(entries, rates, homeCurrency) {
         entries?.let { MonthlyStats.summarize(it, YearMonth.now(zone), homeCurrency, rates, zone) }
+    }
+
+    // 每次回到前台（包括刚打开）都补一下汇率；断网时什么也不做，接着用存下的。
+    LifecycleStartEffect(viewModel) {
+        viewModel.refreshRates()
+        onStopOrDispose { }
     }
 
     // 账本页的对话框：0 是新记一笔，其他是正在修改的那一笔。放在这里是因为按钮在 Scaffold 上。
@@ -150,6 +158,7 @@ fun SnapLedgerApp(viewModel: LedgerViewModel = viewModel(factory = LedgerViewMod
                     entries = entries,
                     summary = summary,
                     homeCurrency = homeCurrency,
+                    rates = rates,
                     zone = zone,
                     dialogFor = ledgerDialog,
                     onDialogFor = { ledgerDialog = it },
@@ -162,7 +171,16 @@ fun SnapLedgerApp(viewModel: LedgerViewModel = viewModel(factory = LedgerViewMod
             composable(Routes.STATS) { StatsScreen() }
             composable(Routes.REVIEW) { ReviewScreen() }
             composable(Routes.MAP) { MapScreen() }
-            composable(Routes.SETTINGS) { SettingsScreen(onBack = { navController.popBackStack() }) }
+            composable(Routes.SETTINGS) {
+                SettingsScreen(
+                    homeCurrency = homeCurrency,
+                    onHomeCurrency = viewModel::setHomeCurrency,
+                    rates = rates,
+                    rateStatus = rateStatus,
+                    onUpdateRates = { viewModel.refreshRates(force = true) },
+                    onBack = { navController.popBackStack() },
+                )
+            }
         }
     }
 

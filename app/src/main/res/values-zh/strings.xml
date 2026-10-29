@@ -71,4 +71,21 @@
     <string name="import_list_save">记下 %1$d 笔</string>
     <string name="import_list_duplicate">可能已经记过</string>
     <string name="msg_saved_several">已记下 %1$d 笔</string>
+
+    <!-- 设置：主货币和汇率 -->
+    <string name="settings_home_currency">主货币</string>
+    <string name="settings_home_currency_hint">统计和回顾都换算成这种货币，手动记账时也默认用它。</string>
+    <string name="currency_krw">韩元</string>
+    <string name="currency_cny">人民币</string>
+    <string name="currency_usd">美元</string>
+    <string name="currency_jpy">日元</string>
+    <string name="currency_eur">欧元</string>
+    <string name="settings_rates">汇率</string>
+    <string name="rates_date">最新汇率：%1$s</string>
+    <string name="rates_none">还没有汇率，联网后会自动下载。</string>
+    <string name="rates_updating">正在更新汇率…</string>
+    <string name="rates_failed">没能更新（请检查网络），先用已经存下的汇率。</string>
+    <string name="rates_update_now">立即更新</string>
+    <string name="rates_rule">外币按付款那天的汇率换算；周末和节假日用之前最近一个工作日的汇率。</string>
+    <string name="rates_source">汇率是欧洲央行每个工作日公布的参考汇率，通过 Frankfurter 下载。断网时用最近一次下载的汇率。</string>
 </resources>
