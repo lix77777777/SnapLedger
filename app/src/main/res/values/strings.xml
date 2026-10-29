@@ -88,4 +88,24 @@
     <string name="rates_update_now">Update now</string>
     <string name="rates_rule">Each payment uses that day\'s rate. Weekends and holidays use the last working day before.</string>
     <string name="rates_source">Reference rates published by the European Central Bank every working day, via Frankfurter. Offline, the last downloaded rates are used.</string>
+
+    <!-- Stats -->
+    <string name="stats_month_pattern">MMMM yyyy</string>
+    <string name="stats_prev_month">Previous month</string>
+    <string name="stats_next_month">Next month</string>
+    <string name="stats_total">Total spent</string>
+    <string name="stats_vs_last_more">%1$s more than last month</string>
+    <string name="stats_vs_last_less">%1$s less than last month</string>
+    <string name="stats_vs_last_same">Same as last month</string>
+    <string name="stats_empty">Nothing recorded this month</string>
+    <string name="stats_by_category">By category</string>
+    <string name="stats_by_day">Daily spending</string>
+    <string name="stats_top_day">Top day: day %1$d, %2$s</string>
+    <string name="stats_calendar">Spending calendar</string>
+    <string name="stats_calendar_hint">Darker days cost more. Tap a day for details.</string>
+    <string name="stats_day_detail">%1$s: %2$s, %3$d entries</string>
+    <string name="stats_day_empty">%1$s: nothing recorded</string>
+    <string name="stats_top_merchants">Top places</string>
+    <string name="stats_merchant_count">%1$d visits</string>
+    <string name="stats_biggest">Biggest expense</string>
 </resources>

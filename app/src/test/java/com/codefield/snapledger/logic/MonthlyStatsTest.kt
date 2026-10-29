@@ -95,4 +95,10 @@ class MonthlyStatsTest {
         assertNull(s.biggest)
         assertEquals("11 月有一笔", 1000L, s.previousTotalMinor)
     }
+
+    @Test
+    fun firstMonth_isTheMonthOfTheOldestEntry() {
+        assertEquals(YearMonth.of(2026, 9), MonthlyStats.firstMonth(entries, seoul))
+        assertNull(MonthlyStats.firstMonth(emptyList(), seoul))
+    }
 }

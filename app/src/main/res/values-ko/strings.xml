@@ -88,4 +88,24 @@
     <string name="rates_update_now">지금 업데이트</string>
     <string name="rates_rule">외화는 결제한 날의 환율로 환산해요. 주말·공휴일에는 직전 영업일 환율을 써요.</string>
     <string name="rates_source">유럽중앙은행이 영업일마다 발표하는 기준 환율을 Frankfurter에서 받아요. 오프라인일 때는 마지막으로 받은 환율을 써요.</string>
+
+    <!-- 통계 -->
+    <string name="stats_month_pattern">yyyy년 M월</string>
+    <string name="stats_prev_month">지난달</string>
+    <string name="stats_next_month">다음 달</string>
+    <string name="stats_total">총 지출</string>
+    <string name="stats_vs_last_more">지난달보다 %1$s 더 썼어요</string>
+    <string name="stats_vs_last_less">지난달보다 %1$s 덜 썼어요</string>
+    <string name="stats_vs_last_same">지난달과 같아요</string>
+    <string name="stats_empty">이번 달 기록이 없어요</string>
+    <string name="stats_by_category">카테고리별</string>
+    <string name="stats_by_day">일별 지출</string>
+    <string name="stats_top_day">가장 많이 쓴 날: %1$d일, %2$s</string>
+    <string name="stats_calendar">지출 달력</string>
+    <string name="stats_calendar_hint">색이 진할수록 많이 쓴 날이에요. 날짜를 누르면 자세히 보여요.</string>
+    <string name="stats_day_detail">%1$s: %2$s, %3$d건</string>
+    <string name="stats_day_empty">%1$s: 기록 없음</string>
+    <string name="stats_top_merchants">자주 간 곳</string>
+    <string name="stats_merchant_count">%1$d회</string>
+    <string name="stats_biggest">가장 큰 지출</string>
 </resources>

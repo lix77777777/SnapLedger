@@ -88,4 +88,24 @@
     <string name="rates_update_now">立即更新</string>
     <string name="rates_rule">外币按付款那天的汇率换算；周末和节假日用之前最近一个工作日的汇率。</string>
     <string name="rates_source">汇率是欧洲央行每个工作日公布的参考汇率，通过 Frankfurter 下载。断网时用最近一次下载的汇率。</string>
+
+    <!-- 统计 -->
+    <string name="stats_month_pattern">yyyy年M月</string>
+    <string name="stats_prev_month">上个月</string>
+    <string name="stats_next_month">下个月</string>
+    <string name="stats_total">支出合计</string>
+    <string name="stats_vs_last_more">比上个月多花 %1$s</string>
+    <string name="stats_vs_last_less">比上个月少花 %1$s</string>
+    <string name="stats_vs_last_same">和上个月一样</string>
+    <string name="stats_empty">这个月还没有记账</string>
+    <string name="stats_by_category">按类别</string>
+    <string name="stats_by_day">每天花了多少</string>
+    <string name="stats_top_day">花得最多的一天：%1$d 号，%2$s</string>
+    <string name="stats_calendar">消费日历</string>
+    <string name="stats_calendar_hint">颜色越深花得越多，点一天看详情。</string>
+    <string name="stats_day_detail">%1$s：%2$s，%3$d 笔</string>
+    <string name="stats_day_empty">%1$s：没有记账</string>
+    <string name="stats_top_merchants">常去的店</string>
+    <string name="stats_merchant_count">%1$d 次</string>
+    <string name="stats_biggest">最大的一笔</string>
 </resources>

@@ -168,7 +168,7 @@ fun SnapLedgerApp(viewModel: LedgerViewModel = viewModel(factory = LedgerViewMod
                     imageFor = viewModel::imageFile,
                 )
             }
-            composable(Routes.STATS) { StatsScreen() }
+            composable(Routes.STATS) { StatsScreen(entries = entries, rates = rates, homeCurrency = homeCurrency, zone = zone) }
             composable(Routes.REVIEW) { ReviewScreen() }
             composable(Routes.MAP) { MapScreen() }
             composable(Routes.SETTINGS) {

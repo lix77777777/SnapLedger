@@ -50,6 +50,10 @@ object MonthlyStats {
         )
     }
 
+    /** 最早一笔账所在的月份，统计页最多翻到这里；没有账时是 null。 */
+    fun firstMonth(entries: List<Entry>, zone: ZoneId): YearMonth? =
+        entries.minOfOrNull { it.time }?.let { YearMonth.from(localDate(it, zone)) }
+
     /** 这个月记了几笔，以及能换算成主货币的那些（每笔配上换算后的金额）。 */
     private class Converted(val count: Int, val converted: List<Pair<Entry, Long>>)
 
