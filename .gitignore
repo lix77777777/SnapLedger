@@ -16,3 +16,5 @@ local.properties
 .kotlin
 # 用户自己的付款截图（有个人信息），只在本机测试用，不提交
 /samples
+# 学校的报告（Word）里有学号，不提交
+/docs/*.docx
