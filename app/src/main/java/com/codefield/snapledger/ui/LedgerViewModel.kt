@@ -12,6 +12,11 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.codefield.snapledger.AppContainer
 import com.codefield.snapledger.LedgerApplication
+import com.codefield.snapledger.logic.BudgetCheck
+import com.codefield.snapledger.logic.BudgetLevel
+import com.codefield.snapledger.logic.CurrencyConverter
+import com.codefield.snapledger.logic.LocationPolicy
+import com.codefield.snapledger.logic.MonthlyStats
 import com.codefield.snapledger.logic.RateTable
 import com.codefield.snapledger.model.Category
 import com.codefield.snapledger.model.Currency
@@ -46,6 +51,8 @@ sealed interface LedgerMessage {
     data class Deleted(val entry: Entry) : LedgerMessage
     /** 选的或分享过来的图片里有打不开的，已经跳过。 */
     data object ImageFailed : LedgerMessage
+    /** 这一笔让本月支出跨过了预算的 80% 或 100%。金额都是主货币。 */
+    data class Budget(val level: BudgetLevel, val spent: Money, val budget: Money) : LedgerMessage
 }
 
 /**
@@ -100,6 +107,13 @@ class LedgerViewModel(
     private val _reviewReminder = MutableStateFlow(container.settings.reviewReminder)
     val reviewReminder: StateFlow<Boolean> = _reviewReminder.asStateFlow()
 
+    private val _recordLocation = MutableStateFlow(container.settings.recordLocation)
+    val recordLocation: StateFlow<Boolean> = _recordLocation.asStateFlow()
+
+    private val _budget = MutableStateFlow(container.settings.budget)
+    /** 每月预算（设的时候的货币）；没设是 null。 */
+    val budget: StateFlow<Money?> = _budget.asStateFlow()
+
     /** 点了回顾提醒的通知，等着打开的那个月；打开以后清掉。 */
     private val _openReview = MutableStateFlow<YearMonth?>(null)
     val openReview: StateFlow<YearMonth?> = _openReview.asStateFlow()
@@ -123,14 +137,67 @@ class LedgerViewModel(
         }
     }
 
-    /** 编号是 0 就新记一笔，否则修改原来那笔。 */
+    /** 编号是 0 就新记一笔，否则修改原来那笔。新记的、刚付完款的，带上当前位置。 */
     fun save(entry: Entry) {
         viewModelScope.launch {
-            if (entry.id == 0L) repository.add(entry) else repository.update(entry)
-            _messages.emit(LedgerMessage.Saved)
+            val before = entries.value.orEmpty()
+            val saved = if (entry.id == 0L) withLocation(listOf(entry)).single() else entry
+            if (saved.id == 0L) repository.add(saved) else repository.update(saved)
+            // 跨过预算线时只显示预算的提醒（它本身就说明记下了），不然两条提示要排队，预算那条晚几秒才出来。
+            _messages.emit(budgetCrossed(before, listOf(saved)) ?: LedgerMessage.Saved)
             // 记了比已有汇率更早的账时，补上那几天的汇率。
             refreshRates()
         }
+    }
+
+    /**
+     * 给新记的账带上手机当前的位置：设置里开着、自己没选位置、而且是刚付完款记的（见 [LocationPolicy]）。
+     * 位置只取一次，好几笔一起记时共用。
+     */
+    private suspend fun withLocation(list: List<Entry>): List<Entry> {
+        if (!container.settings.recordLocation) return list
+        val now = System.currentTimeMillis()
+        val needs = list.filter { it.location == null && LocationPolicy.shouldAttach(it.time, now) }
+        if (needs.isEmpty()) return list
+        val place = container.locationProvider.current() ?: return list
+        return list.map { if (it in needs) it.copy(location = place) else it }
+    }
+
+    /** 这次记账（或修改）让本月支出跨过预算的 80% 或 100% 时，返回要显示的提醒；没跨过是 null。 */
+    private fun budgetCrossed(before: List<Entry>, changed: List<Entry>): LedgerMessage.Budget? {
+        val budget = budgetInHome() ?: return null
+        val month = YearMonth.now(zone)
+        val home = homeCurrency.value
+        val table = rates.value
+        val after = before.filterNot { old -> changed.any { it.id != 0L && it.id == old.id } } + changed
+        val spentBefore = MonthlyStats.summarize(before, month, home, table, zone).totalMinor
+        val spentAfter = MonthlyStats.summarize(after, month, home, table, zone).totalMinor
+        val level = BudgetCheck.crossed(spentBefore, spentAfter, budget.minor) ?: return null
+        return LedgerMessage.Budget(level, Money(spentAfter, home), budget)
+    }
+
+    /** 预算换算成现在的主货币（设预算之后换过主货币时，按最新汇率换算）；没设或换算不了时是 null。 */
+    fun budgetInHome(): Money? {
+        val budget = _budget.value ?: return null
+        return CurrencyConverter.convert(budget, homeCurrency.value, rates.value.latest)
+    }
+
+    fun setBudget(budget: Money?) {
+        container.settings.budget = budget
+        _budget.value = budget
+    }
+
+    fun setRecordLocation(enabled: Boolean) {
+        container.settings.recordLocation = enabled
+        _recordLocation.value = enabled
+    }
+
+    /** 第一次新记一笔时问定位权限；问过一次就不再自动问。 */
+    val shouldAskLocation: Boolean
+        get() = container.settings.recordLocation && !container.settings.locationAsked && !container.locationProvider.hasPermission()
+
+    fun locationAsked() {
+        container.settings.locationAsked = true
     }
 
     fun setHomeCurrency(currency: Currency) {
@@ -232,8 +299,10 @@ class LedgerViewModel(
         if (_imports.value.current == null || items.isEmpty()) return
         popImport()
         viewModelScope.launch {
-            repository.addAll(items)
-            _messages.emit(LedgerMessage.SavedSeveral(items.size))
+            val before = entries.value.orEmpty()
+            val saved = withLocation(items)
+            repository.addAll(saved)
+            _messages.emit(budgetCrossed(before, saved) ?: LedgerMessage.SavedSeveral(items.size))
             refreshRates()
         }
     }

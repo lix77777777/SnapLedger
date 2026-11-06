@@ -175,4 +175,31 @@
     <string name="persona_global_text">여러 통화를 오가며 지낸 한 달이었어요.</string>
     <string name="persona_balanced">균형 잡힌 생활형</string>
     <string name="persona_balanced_text">어느 한쪽에 치우치지 않고 고르게 썼어요.</string>
+
+    <!-- 위치, 지출 지도와 예산 -->
+    <string name="field_location">위치</string>
+    <string name="location_none">위치 없음</string>
+    <string name="location_set">위치 저장됨</string>
+    <string name="location_pick">지도에서 선택</string>
+    <string name="location_change">위치 바꾸기</string>
+    <string name="location_clear">지우기</string>
+    <string name="map_pick_title">결제한 곳</string>
+    <string name="map_pick_hint">지도를 움직여 가운데 표시를 결제한 곳에 맞추세요.</string>
+    <string name="map_attribution">© OpenStreetMap 기여자</string>
+    <string name="map_empty">이번 달에는 위치가 있는 기록이 없어요. 결제 직후에 기록하면 위치가 자동으로 저장되고, 예전 기록은 기록 화면에서 ‘지도에서 선택’을 누르면 돼요.</string>
+    <string name="map_count">이번 달 위치가 있는 기록 %1$d건, 모두 %2$s</string>
+    <string name="settings_location">기록할 때 위치 저장</string>
+    <string name="settings_location_hint">결제 후 2시간 안에 기록할 때만 현재 위치를 저장해요. 그보다 오래된 기록은 직접 선택할 수 있어요.</string>
+    <string name="settings_location_off">위치 권한이 꺼져 있어 위치가 저장되지 않아요.</string>
+    <string name="settings_location_on">위치 권한 켜기</string>
+    <string name="settings_budget">월 예산</string>
+    <string name="settings_budget_none">예산 없음</string>
+    <string name="settings_budget_value">매월 %1$s</string>
+    <string name="settings_budget_hint">예산의 80%를 쓰거나 넘으면 알려 드려요.</string>
+    <string name="settings_budget_set">예산 설정</string>
+    <string name="budget_clear">예산 지우기</string>
+    <string name="budget_progress">예산 %1$s · %2$d%% 사용</string>
+    <string name="budget_over">예산을 %1$s 넘었어요</string>
+    <string name="msg_budget_warning">이번 달 예산의 80%%를 썼어요 (%1$s / %2$s)</string>
+    <string name="msg_budget_over">이번 달 예산을 %1$s 넘었어요</string>
 </resources>

@@ -64,6 +64,8 @@ dependencies {
     implementation(libs.mlkit.text.chinese)
     implementation(libs.coil.compose)
     implementation(libs.androidx.exifinterface)
+    // 消费地图：OpenStreetMap，不需要密钥。
+    implementation(libs.osmdroid.android)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

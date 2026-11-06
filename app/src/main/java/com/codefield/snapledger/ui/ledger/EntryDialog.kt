@@ -28,6 +28,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
@@ -39,8 +40,10 @@ import com.codefield.snapledger.logic.AmountInput
 import com.codefield.snapledger.model.Category
 import com.codefield.snapledger.model.Currency
 import com.codefield.snapledger.model.Entry
+import com.codefield.snapledger.model.GeoPoint
 import com.codefield.snapledger.model.Money
 import com.codefield.snapledger.model.Source
+import com.codefield.snapledger.ui.map.MapPickerDialog
 import com.codefield.snapledger.ui.common.ScreenshotThumbnail
 import com.codefield.snapledger.ui.common.ScreenshotViewer
 import com.codefield.snapledger.ui.common.categoryEmoji
@@ -87,6 +90,9 @@ fun EntryDialog(
     var category by rememberSaveable { mutableStateOf(initial?.category ?: Category.OTHER) }
     var time by rememberSaveable { mutableLongStateOf(initial?.time ?: System.currentTimeMillis()) }
     var note by rememberSaveable { mutableStateOf(initial?.note.orEmpty()) }
+    // 位置分成经纬度两个数存，旋转屏幕也不丢；没有位置时都是 null。
+    var latitude by rememberSaveable { mutableStateOf(initial?.location?.latitude) }
+    var longitude by rememberSaveable { mutableStateOf(initial?.location?.longitude) }
     var showError by rememberSaveable { mutableStateOf(false) }
     var picker by rememberSaveable { mutableStateOf(Picker.NONE) }
     var viewingImage by rememberSaveable { mutableStateOf(false) }
@@ -172,6 +178,24 @@ fun EntryDialog(
                     }
                     OutlinedButton(onClick = { picker = Picker.TIME }) { Text(dateTime.format(TIME_FORMAT)) }
                 }
+                Text(stringResource(R.string.field_location), style = MaterialTheme.typography.labelLarge)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val hasPlace = latitude != null && longitude != null
+                    Text(
+                        stringResource(if (hasPlace) R.string.location_set else R.string.location_none),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f),
+                    )
+                    OutlinedButton(onClick = { picker = Picker.MAP }) {
+                        Text(stringResource(if (hasPlace) R.string.location_change else R.string.location_pick))
+                    }
+                    if (hasPlace) {
+                        TextButton(onClick = {
+                            latitude = null
+                            longitude = null
+                        }) { Text(stringResource(R.string.location_clear)) }
+                    }
+                }
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it },
@@ -183,6 +207,8 @@ fun EntryDialog(
         confirmButton = {
             TextButton(onClick = {
                 val money = amount
+                val lat = latitude
+                val lng = longitude
                 if (money == null) {
                     showError = true
                 } else {
@@ -194,7 +220,7 @@ fun EntryDialog(
                             merchant = merchant.trim(),
                             time = time,
                             note = note.trim(),
-                            location = initial?.location,
+                            location = if (lat != null && lng != null) GeoPoint(lat, lng) else null,
                             source = initial?.source ?: Source.MANUAL,
                             imagePath = initial?.imagePath,
                         )
@@ -251,10 +277,23 @@ fun EntryDialog(
                 dismissButton = { TextButton(onClick = { picker = Picker.NONE }) { Text(stringResource(R.string.cancel)) } },
             )
         }
+        Picker.MAP -> {
+            val lat = latitude
+            val lng = longitude
+            MapPickerDialog(
+                initial = if (lat != null && lng != null) GeoPoint(lat, lng) else null,
+                onPick = { place ->
+                    latitude = place.latitude
+                    longitude = place.longitude
+                    picker = Picker.NONE
+                },
+                onDismiss = { picker = Picker.NONE },
+            )
+        }
         Picker.NONE -> Unit
     }
 }
 
-private enum class Picker { NONE, DATE, TIME }
+private enum class Picker { NONE, DATE, TIME, MAP }
 
 private val TIME_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")

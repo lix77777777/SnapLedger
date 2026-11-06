@@ -175,4 +175,31 @@
     <string name="persona_global_text">You spent across currencies this month.</string>
     <string name="persona_balanced">Well balanced</string>
     <string name="persona_balanced_text">No single category ran away with your money.</string>
+
+    <!-- Location, spending map and budget -->
+    <string name="field_location">Location</string>
+    <string name="location_none">No location</string>
+    <string name="location_set">Location saved</string>
+    <string name="location_pick">Pick on map</string>
+    <string name="location_change">Change</string>
+    <string name="location_clear">Remove</string>
+    <string name="map_pick_title">Where you paid</string>
+    <string name="map_pick_hint">Move the map so the cross sits on the place.</string>
+    <string name="map_attribution">© OpenStreetMap contributors</string>
+    <string name="map_empty">No entries with a location this month. Entries recorded right after paying get one automatically; for older ones, use Pick on map.</string>
+    <string name="map_count">%1$d entries with a location, %2$s in total</string>
+    <string name="settings_location">Save location with new entries</string>
+    <string name="settings_location_hint">Only entries recorded within 2 hours of paying get your current location. For older ones, pick it on the map.</string>
+    <string name="settings_location_off">Location permission is off, so no location is saved.</string>
+    <string name="settings_location_on">Allow location</string>
+    <string name="settings_budget">Monthly budget</string>
+    <string name="settings_budget_none">No budget set</string>
+    <string name="settings_budget_value">%1$s per month</string>
+    <string name="settings_budget_hint">You get a heads-up at 80 percent and when you go over.</string>
+    <string name="settings_budget_set">Set budget</string>
+    <string name="budget_clear">Remove budget</string>
+    <string name="budget_progress">Budget %1$s · %2$d%% used</string>
+    <string name="budget_over">%1$s over budget</string>
+    <string name="msg_budget_warning">You’ve used 80%% of this month’s budget (%1$s / %2$s)</string>
+    <string name="msg_budget_over">You’re %1$s over this month’s budget</string>
 </resources>

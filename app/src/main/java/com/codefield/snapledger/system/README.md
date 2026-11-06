@@ -7,4 +7,4 @@
 - `RateUpdater`：按 logic 的 `RatePlanner` 算出缺哪几段汇率，用 remote 下载，存进数据库；断网时什么也不存。
 - `ReviewReminder` / `ReviewReminderWorker`：每月 1 号上午 10 点提醒看上个月的回顾（WorkManager 一次性任务，到点发通知再排下个月）。Worker 由 WorkManager 用反射创建，所以从 `LedgerApplication` 取共用的对象。
 - `ImageSharer`：把图片存成 PNG 放在缓存的 shared/ 里，通过 FileProvider 交给系统的分享面板。
-- 以后：定位。
+- `LocationProvider`：用系统的 LocationManager 取当前位置（不依赖 Google Play 服务），几秒取不到就用最近一次的位置。

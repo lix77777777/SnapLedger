@@ -45,7 +45,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.codefield.snapledger.R
+import com.codefield.snapledger.logic.BudgetLevel
+import com.codefield.snapledger.logic.LocationPolicy
 import com.codefield.snapledger.logic.MonthlyReview
+import com.codefield.snapledger.model.Entry
+import com.codefield.snapledger.model.Money
+import com.codefield.snapledger.ui.common.formatMoney
+import com.codefield.snapledger.ui.common.rememberLocationAccess
 import com.codefield.snapledger.logic.MonthlyStats
 import com.codefield.snapledger.ui.ledger.ImportDialog
 import com.codefield.snapledger.ui.ledger.LedgerScreen
@@ -95,9 +101,24 @@ fun SnapLedgerApp(viewModel: LedgerViewModel = viewModel(factory = LedgerViewMod
     val rateStatus by viewModel.rateStatus.collectAsStateWithLifecycle()
     val reviewReminder by viewModel.reviewReminder.collectAsStateWithLifecycle()
     val openReview by viewModel.openReview.collectAsStateWithLifecycle()
+    val recordLocation by viewModel.recordLocation.collectAsStateWithLifecycle()
+    val budget by viewModel.budget.collectAsStateWithLifecycle()
     val zone = remember { ZoneId.systemDefault() }
     val summary = remember(entries, rates, homeCurrency) {
         entries?.let { MonthlyStats.summarize(it, YearMonth.now(zone), homeCurrency, rates, zone) }
+    }
+    val budgetInHome = remember(budget, homeCurrency, rates) { viewModel.budgetInHome() }
+
+    // 第一次记刚付完款的账时先问定位权限，问完再保存（同不同意都保存）；之后不再自动问。
+    val location = rememberLocationAccess()
+    val askLocationThen: (List<Entry>, () -> Unit) -> Unit = { list, save ->
+        val now = System.currentTimeMillis()
+        if (viewModel.shouldAskLocation && list.any { it.id == 0L && LocationPolicy.shouldAttach(it.time, now) }) {
+            viewModel.locationAsked()
+            location.request { save() }
+        } else {
+            save()
+        }
     }
 
     // 每次回到前台（包括刚打开）都补一下汇率；断网时什么也不做，接着用存下的。
@@ -138,6 +159,17 @@ fun SnapLedgerApp(viewModel: LedgerViewModel = viewModel(factory = LedgerViewMod
                         if (result == SnackbarResult.ActionPerformed) viewModel.restore(message.entry)
                     }
                     LedgerMessage.ImageFailed -> snackbarHostState.showSnackbar(resources.getString(R.string.msg_image_failed))
+                    is LedgerMessage.Budget -> snackbarHostState.showSnackbar(
+                        message = when (message.level) {
+                            BudgetLevel.WARNING ->
+                                resources.getString(R.string.msg_budget_warning, formatMoney(message.spent), formatMoney(message.budget))
+                            BudgetLevel.OVER -> resources.getString(
+                                R.string.msg_budget_over,
+                                formatMoney(Money(message.spent.minor - message.budget.minor, message.budget.currency)),
+                            )
+                        },
+                        duration = SnackbarDuration.Long,
+                    )
                 }
             }
         }
@@ -170,10 +202,11 @@ fun SnapLedgerApp(viewModel: LedgerViewModel = viewModel(factory = LedgerViewMod
                     summary = summary,
                     homeCurrency = homeCurrency,
                     rates = rates,
+                    budget = budgetInHome,
                     zone = zone,
                     dialogFor = ledgerDialog,
                     onDialogFor = { ledgerDialog = it },
-                    onSave = viewModel::save,
+                    onSave = { entry -> askLocationThen(listOf(entry)) { viewModel.save(entry) } },
                     onDelete = viewModel::delete,
                     onOpenSettings = { navController.navigate(Routes.SETTINGS) },
                     imageFor = viewModel::imageFile,
@@ -208,7 +241,7 @@ fun SnapLedgerApp(viewModel: LedgerViewModel = viewModel(factory = LedgerViewMod
                     },
                 )
             }
-            composable(Routes.MAP) { MapScreen() }
+            composable(Routes.MAP) { MapScreen(entries = entries, rates = rates, homeCurrency = homeCurrency, zone = zone) }
             composable(Routes.SETTINGS) {
                 SettingsScreen(
                     homeCurrency = homeCurrency,
@@ -223,6 +256,10 @@ fun SnapLedgerApp(viewModel: LedgerViewModel = viewModel(factory = LedgerViewMod
                         val today = LocalDate.now(zone)
                         viewModel.sendTestReminder(entries?.let { MonthlyReview.defaultMonth(it, today, zone) } ?: YearMonth.from(today))
                     },
+                    recordLocation = recordLocation,
+                    onRecordLocation = viewModel::setRecordLocation,
+                    budget = budget,
+                    onBudget = viewModel::setBudget,
                     onBack = { navController.popBackStack() },
                 )
             }
@@ -243,8 +280,8 @@ fun SnapLedgerApp(viewModel: LedgerViewModel = viewModel(factory = LedgerViewMod
         defaultCurrency = homeCurrency,
         zone = zone,
         imageFor = viewModel::imageFile,
-        onConfirm = viewModel::confirmImport,
-        onConfirmItems = viewModel::confirmImportItems,
+        onConfirm = { entry -> askLocationThen(listOf(entry)) { viewModel.confirmImport(entry) } },
+        onConfirmItems = { items -> askLocationThen(items) { viewModel.confirmImportItems(items) } },
         onSelectItems = viewModel::selectImportItems,
         onEditItem = viewModel::editImportItem,
         onSkip = viewModel::skipImport,

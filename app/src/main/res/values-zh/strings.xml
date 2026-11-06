@@ -175,4 +175,31 @@
     <string name="persona_global_text">好几种货币一起花，生活在两个世界之间。</string>
     <string name="persona_balanced">均衡生活型</string>
     <string name="persona_balanced_text">哪一类都不偏多，花得很均衡。</string>
+
+    <!-- 位置、消费地图和预算 -->
+    <string name="field_location">位置</string>
+    <string name="location_none">没有位置</string>
+    <string name="location_set">已记下位置</string>
+    <string name="location_pick">在地图上选</string>
+    <string name="location_change">改位置</string>
+    <string name="location_clear">清除</string>
+    <string name="map_pick_title">付款的地方</string>
+    <string name="map_pick_hint">移动地图，让中间的十字对准付款的地方。</string>
+    <string name="map_attribution">© OpenStreetMap 贡献者</string>
+    <string name="map_empty">这个月还没有带位置的账。付款后马上记账会自动记下位置，以前的账可以在「记一笔」里点「在地图上选」。</string>
+    <string name="map_count">这个月有 %1$d 笔带位置，一共 %2$s</string>
+    <string name="settings_location">记账时记下位置</string>
+    <string name="settings_location_hint">只在付款后 2 小时内记账时，记下手机当前的位置；更早的账可以在「记一笔」里手动选。</string>
+    <string name="settings_location_off">定位权限没开，不会记下位置。</string>
+    <string name="settings_location_on">开启定位</string>
+    <string name="settings_budget">每月预算</string>
+    <string name="settings_budget_none">没有设置预算</string>
+    <string name="settings_budget_value">每月 %1$s</string>
+    <string name="settings_budget_hint">花到预算的八成和超出预算时会提醒你。</string>
+    <string name="settings_budget_set">设置预算</string>
+    <string name="budget_clear">不设预算</string>
+    <string name="budget_progress">预算 %1$s · 已用 %2$d%%</string>
+    <string name="budget_over">已超出预算 %1$s</string>
+    <string name="msg_budget_warning">这个月已经花了预算的八成（%1$s / %2$s）</string>
+    <string name="msg_budget_over">这个月已经超出预算 %1$s</string>
 </resources>

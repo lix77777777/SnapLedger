@@ -5,6 +5,11 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- 每月 1 号的回顾提醒（安卓 13 起要用户同意）。 -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- 记账时记下当前位置（付款后 2 小时内记的账才记），用户可以只给大概位置。 -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- 地图下载图块前要看有没有网络。 -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:name=".LedgerApplication"

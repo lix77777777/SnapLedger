@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -34,6 +35,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.codefield.snapledger.R
+import com.codefield.snapledger.logic.BudgetCheck
+import com.codefield.snapledger.logic.BudgetLevel
 import com.codefield.snapledger.logic.CurrencyConverter
 import com.codefield.snapledger.logic.RateTable
 import com.codefield.snapledger.model.Currency
@@ -62,6 +65,8 @@ fun LedgerScreen(
     summary: MonthSummary?,
     homeCurrency: Currency,
     rates: RateTable,
+    /** 每月预算（已换算成主货币）；没设是 null。 */
+    budget: Money?,
     zone: ZoneId,
     dialogFor: Long?,
     onDialogFor: (Long?) -> Unit,
@@ -87,7 +92,7 @@ fun LedgerScreen(
                     TextButton(onClick = onOpenSettings) { Text(stringResource(R.string.action_settings)) }
                 }
             }
-            item { MonthCard(summary) }
+            item { MonthCard(summary, budget) }
             when {
                 entries == null -> Unit
                 entries.isEmpty() -> item { EmptyState() }
@@ -139,7 +144,7 @@ fun LedgerScreen(
 }
 
 @Composable
-private fun MonthCard(summary: MonthSummary?) {
+private fun MonthCard(summary: MonthSummary?, budget: Money?) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
@@ -152,9 +157,34 @@ private fun MonthCard(summary: MonthSummary?) {
                 if (summary.unconvertedCount > 0) {
                     Text(stringResource(R.string.ledger_unconverted, summary.unconvertedCount), style = MaterialTheme.typography.bodySmall)
                 }
+                if (budget != null && budget.minor > 0) BudgetBar(summary.totalMinor, budget)
             }
         }
     }
+}
+
+/** 预算进度：八成以上变成提醒色，超出预算变红并写上超了多少。 */
+@Composable
+private fun BudgetBar(spent: Long, budget: Money) {
+    val level = BudgetCheck.level(spent, budget.minor)
+    val color = when (level) {
+        BudgetLevel.OVER -> MaterialTheme.colorScheme.error
+        BudgetLevel.WARNING -> MaterialTheme.colorScheme.secondary
+        null -> MaterialTheme.colorScheme.primary
+    }
+    LinearProgressIndicator(
+        progress = { (spent.toFloat() / budget.minor).coerceIn(0f, 1f) },
+        color = color,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 10.dp, bottom = 4.dp),
+    )
+    Text(
+        if (level == BudgetLevel.OVER) stringResource(R.string.budget_over, formatMoney(Money(spent - budget.minor, budget.currency)))
+        else stringResource(R.string.budget_progress, formatMoney(budget), (spent * 100 / budget.minor).toInt()),
+        style = MaterialTheme.typography.bodySmall,
+        color = if (level == BudgetLevel.OVER) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onPrimaryContainer,
+    )
 }
 
 @Composable

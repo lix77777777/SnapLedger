@@ -7,6 +7,7 @@ import com.codefield.snapledger.data.SettingsStore
 import com.codefield.snapledger.data.db.LedgerDatabase
 import com.codefield.snapledger.remote.FrankfurterApi
 import com.codefield.snapledger.system.ImageSharer
+import com.codefield.snapledger.system.LocationProvider
 import com.codefield.snapledger.system.RateUpdater
 import com.codefield.snapledger.system.ReviewReminder
 import com.codefield.snapledger.system.ScreenshotReader
@@ -28,4 +29,5 @@ class AppContainer(context: Context) {
     val screenshotReader: ScreenshotReader by lazy { ScreenshotReader(screenshots, TextScanner(), debug = debuggable) }
     val reviewReminder: ReviewReminder by lazy { ReviewReminder(appContext) }
     val imageSharer: ImageSharer by lazy { ImageSharer(appContext) }
+    val locationProvider: LocationProvider by lazy { LocationProvider(appContext) }
 }
