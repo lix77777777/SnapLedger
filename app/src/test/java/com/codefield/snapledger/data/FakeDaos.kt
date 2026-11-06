@@ -36,6 +36,10 @@ internal class FakeEntryDao : EntryDao {
     override suspend fun delete(id: Long) {
         rows.value = rows.value.filterNot { it.id == id }
     }
+
+    override suspend fun deleteAll() {
+        rows.value = emptyList()
+    }
 }
 
 internal class FakeRateDao : RateDao {

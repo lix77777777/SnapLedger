@@ -27,6 +27,10 @@ interface EntryDao {
 
     @Query("DELETE FROM entries WHERE id = :id")
     suspend fun delete(id: Long)
+
+    /** 调试版换成演示数据时用。 */
+    @Query("DELETE FROM entries")
+    suspend fun deleteAll()
 }
 
 @Dao

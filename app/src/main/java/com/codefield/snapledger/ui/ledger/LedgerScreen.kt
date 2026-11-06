@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -153,9 +154,9 @@ private fun MonthCard(summary: MonthSummary?, budget: Money?) {
             val total = summary?.let { formatMoney(Money(it.totalMinor, it.currency)) } ?: "—"
             Text(stringResource(R.string.ledger_month_total, total), style = MaterialTheme.typography.titleLarge)
             if (summary != null) {
-                Text(stringResource(R.string.ledger_month_count, summary.entryCount), style = MaterialTheme.typography.bodyMedium)
+                Text(pluralStringResource(R.plurals.ledger_month_count, summary.entryCount, summary.entryCount), style = MaterialTheme.typography.bodyMedium)
                 if (summary.unconvertedCount > 0) {
-                    Text(stringResource(R.string.ledger_unconverted, summary.unconvertedCount), style = MaterialTheme.typography.bodySmall)
+                    Text(pluralStringResource(R.plurals.ledger_unconverted, summary.unconvertedCount, summary.unconvertedCount), style = MaterialTheme.typography.bodySmall)
                 }
                 if (budget != null && budget.minor > 0) BudgetBar(summary.totalMinor, budget)
             }

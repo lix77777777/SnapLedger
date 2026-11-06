@@ -5,6 +5,7 @@
 - `TextScanner`：ML Kit 文字识别（韩文、中文两个模型，打包在 App 里，不联网）。
 - `ScreenshotReader`：把上面两个和 logic 的规则串起来：识别 → 拼行 → 挑一份 → 解析成一笔账。
 - `RateUpdater`：按 logic 的 `RatePlanner` 算出缺哪几段汇率，用 remote 下载，存进数据库；断网时什么也不存。
-- `ReviewReminder` / `ReviewReminderWorker`：每月 1 号上午 10 点提醒看上个月的回顾（WorkManager 一次性任务，到点发通知再排下个月）。Worker 由 WorkManager 用反射创建，所以从 `LedgerApplication` 取共用的对象。
+- `ReviewReminder` / `ReviewReminderWorker`：每月 1 号上午 10 点提醒看上个月的回顾（WorkManager 一次性任务，到点先发通知，最后再排下个月：同名任务用 REPLACE 会把正在跑的自己取消掉）。Worker 由 WorkManager 用反射创建，所以从 `LedgerApplication` 取共用的对象。
 - `ImageSharer`：把图片存成 PNG 放在缓存的 shared/ 里，通过 FileProvider 交给系统的分享面板。
 - `LocationProvider`：用系统的 LocationManager 取当前位置（不依赖 Google Play 服务），几秒取不到就用最近一次的位置。
+- `DocumentWriter`：把文字写进用户在系统「另存为」里选的文件（导出 CSV），通过 ContentResolver 写，不用存储权限。

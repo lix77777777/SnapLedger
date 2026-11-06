@@ -124,7 +124,7 @@ private fun CoverPreview(review: MonthReview, onStart: () -> Unit) {
                 fontWeight = FontWeight.Black,
             )
             Text(
-                stringResource(R.string.review_count_days, summary.entryCount, review.activeDays),
+                countAndDays(summary.entryCount, review.activeDays),
                 color = Color.White.copy(alpha = 0.85f),
                 style = MaterialTheme.typography.bodyMedium,
             )

@@ -14,7 +14,10 @@ import com.codefield.snapledger.AppContainer
 import com.codefield.snapledger.LedgerApplication
 import com.codefield.snapledger.logic.BudgetCheck
 import com.codefield.snapledger.logic.BudgetLevel
+import com.codefield.snapledger.logic.CsvExport
+import com.codefield.snapledger.logic.CsvLabels
 import com.codefield.snapledger.logic.CurrencyConverter
+import com.codefield.snapledger.logic.DemoData
 import com.codefield.snapledger.logic.LocationPolicy
 import com.codefield.snapledger.logic.MonthlyStats
 import com.codefield.snapledger.logic.RateTable
@@ -29,6 +32,7 @@ import java.io.IOException
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
+import java.time.ZonedDateTime
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,6 +57,11 @@ sealed interface LedgerMessage {
     data object ImageFailed : LedgerMessage
     /** 这一笔让本月支出跨过了预算的 80% 或 100%。金额都是主货币。 */
     data class Budget(val level: BudgetLevel, val spent: Money, val budget: Money) : LedgerMessage
+    /** 调试版：换成了演示数据。 */
+    data object DemoFilled : LedgerMessage
+    /** 导出了几笔到 CSV。 */
+    data class Exported(val count: Int) : LedgerMessage
+    data object ExportFailed : LedgerMessage
 }
 
 /**
@@ -214,12 +223,40 @@ class LedgerViewModel(
     /** 调试用：马上发一条这个月份的回顾提醒。 */
     fun sendTestReminder(month: YearMonth) = container.reviewReminder.sendNow(month)
 
+    /** 调试用：清空账本，换成两个月的演示数据（见 [DemoData]），再补上那两个月的汇率。 */
+    fun fillDemoData() {
+        viewModelScope.launch {
+            repository.replaceAll(DemoData.entries(ZonedDateTime.now(zone)))
+            _messages.emit(LedgerMessage.DemoFilled)
+            refreshRates()
+        }
+    }
+
     fun openReview(month: YearMonth) {
         _openReview.value = month
     }
 
     fun reviewOpened() {
         _openReview.value = null
+    }
+
+    /** 把所有账目导出成 CSV，写进用户在「另存为」里选的文件。表头和类别名由界面按当前语言给出。 */
+    fun exportCsv(uri: Uri, labels: CsvLabels) {
+        viewModelScope.launch {
+            // 直接查数据库：设置页没有订阅账目，这里的列表可能还没加载。
+            val list = repository.observeEntries().first()
+            val table = RateTable(repository.observeRates().first())
+            val text = CsvExport.csv(list, homeCurrency.value, table, zone, labels)
+            val written = try {
+                container.documentWriter.write(uri, text)
+                true
+            } catch (e: IOException) {
+                false
+            } catch (e: SecurityException) {
+                false
+            }
+            _messages.emit(if (written) LedgerMessage.Exported(list.size) else LedgerMessage.ExportFailed)
+        }
     }
 
     /** 把回顾的总结卡存成图片，返回系统的分享面板。 */

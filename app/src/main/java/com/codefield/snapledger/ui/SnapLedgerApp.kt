@@ -3,11 +3,13 @@ package com.codefield.snapledger.ui
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -30,11 +32,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -78,11 +80,11 @@ object Routes {
 }
 
 /** 底部菜单里的四个主页面。设置从账本页右上角进入，不放在底部菜单。 */
-enum class TopLevel(val route: String, @param:StringRes val label: Int) {
-    Ledger(Routes.LEDGER, R.string.tab_ledger),
-    Stats(Routes.STATS, R.string.tab_stats),
-    Review(Routes.REVIEW, R.string.tab_review),
-    Map(Routes.MAP, R.string.tab_map),
+enum class TopLevel(val route: String, @param:StringRes val label: Int, @param:DrawableRes val icon: Int) {
+    Ledger(Routes.LEDGER, R.string.tab_ledger, R.drawable.ic_tab_ledger),
+    Stats(Routes.STATS, R.string.tab_stats, R.drawable.ic_tab_stats),
+    Review(Routes.REVIEW, R.string.tab_review, R.drawable.ic_tab_review),
+    Map(Routes.MAP, R.string.tab_map, R.drawable.ic_tab_map),
 }
 
 /** 一次最多从相册选几张截图。 */
@@ -148,7 +150,7 @@ fun SnapLedgerApp(viewModel: LedgerViewModel = viewModel(factory = LedgerViewMod
                 when (message) {
                     LedgerMessage.Saved -> snackbarHostState.showSnackbar(resources.getString(R.string.msg_saved))
                     is LedgerMessage.SavedSeveral ->
-                        snackbarHostState.showSnackbar(resources.getString(R.string.msg_saved_several, message.count))
+                        snackbarHostState.showSnackbar(resources.getQuantityString(R.plurals.msg_saved_several, message.count, message.count))
                     is LedgerMessage.Deleted -> {
                         val result = snackbarHostState.showSnackbar(
                             message = resources.getString(R.string.msg_deleted),
@@ -159,6 +161,10 @@ fun SnapLedgerApp(viewModel: LedgerViewModel = viewModel(factory = LedgerViewMod
                         if (result == SnackbarResult.ActionPerformed) viewModel.restore(message.entry)
                     }
                     LedgerMessage.ImageFailed -> snackbarHostState.showSnackbar(resources.getString(R.string.msg_image_failed))
+                    LedgerMessage.DemoFilled -> snackbarHostState.showSnackbar(resources.getString(R.string.msg_demo_filled))
+                    is LedgerMessage.Exported ->
+                        snackbarHostState.showSnackbar(resources.getQuantityString(R.plurals.msg_exported, message.count, message.count))
+                    LedgerMessage.ExportFailed -> snackbarHostState.showSnackbar(resources.getString(R.string.msg_export_failed))
                     is LedgerMessage.Budget -> snackbarHostState.showSnackbar(
                         message = when (message.level) {
                             BudgetLevel.WARNING ->
@@ -260,6 +266,9 @@ fun SnapLedgerApp(viewModel: LedgerViewModel = viewModel(factory = LedgerViewMod
                     onRecordLocation = viewModel::setRecordLocation,
                     budget = budget,
                     onBudget = viewModel::setBudget,
+                    entryCount = entries?.size ?: 0,
+                    onExport = viewModel::exportCsv,
+                    onFillDemo = viewModel::fillDemoData,
                     onBack = { navController.popBackStack() },
                 )
             }
@@ -298,11 +307,15 @@ private fun AddButtons(onScan: () -> Unit, onAdd: () -> Unit) {
             containerColor = MaterialTheme.colorScheme.secondaryContainer,
             modifier = Modifier.clearAndSetSemantics { contentDescription = addLabel },
         ) {
-            Text("+", fontSize = 22.sp)
+            Icon(painterResource(R.drawable.ic_add), contentDescription = null)
         }
-        ExtendedFloatingActionButton(onClick = onScan) {
-            Text(stringResource(R.string.import_screenshot))
-        }
+        // 带图标的扩展按钮会把文字从读屏信息里清掉（按钮收起时只剩图标），所以按钮的名字要写在图标上。
+        val scanLabel = stringResource(R.string.import_screenshot)
+        ExtendedFloatingActionButton(
+            onClick = onScan,
+            icon = { Icon(painterResource(R.drawable.ic_scan), contentDescription = scanLabel) },
+            text = { Text(scanLabel) },
+        )
     }
 }
 
@@ -320,8 +333,8 @@ private fun BottomBar(currentRoute: String?, navController: NavHostController) {
                         restoreState = true
                     }
                 },
-                // 图标最后统一换成正式素材，现在先用文字的第一个字占位。
-                icon = { Text(label.take(1)) },
+                // 下面已经写了名字，图标不用再读一遍。
+                icon = { Icon(painterResource(destination.icon), contentDescription = null) },
                 label = { Text(label) },
             )
         }

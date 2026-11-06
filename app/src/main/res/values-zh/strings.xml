@@ -14,8 +14,6 @@
 
     <!-- 账本和记一笔 -->
     <string name="ledger_month_total">本月支出 %1$s</string>
-    <string name="ledger_month_count">共 %1$d 笔</string>
-    <string name="ledger_unconverted">另有 %1$d 笔外币，取得汇率后计入</string>
     <string name="ledger_empty_title">还没有记账</string>
     <string name="ledger_empty_hint">付款后截个图分享给本应用，或者点右下角的按钮</string>
     <string name="add_entry">记一笔</string>
@@ -67,10 +65,8 @@
     <string name="close">关闭</string>
 
     <!-- 列表截图（一张里有好几笔） -->
-    <string name="import_list_hint">截图里有 %1$d 笔支出，勾上要记的。点一笔可以修改。</string>
     <string name="import_list_save">记下 %1$d 笔</string>
     <string name="import_list_duplicate">可能已经记过</string>
-    <string name="msg_saved_several">已记下 %1$d 笔</string>
 
     <!-- 设置：主货币和汇率 -->
     <string name="settings_home_currency">主货币</string>
@@ -103,17 +99,14 @@
     <string name="stats_top_day">花得最多的一天：%1$d 号，%2$s</string>
     <string name="stats_calendar">消费日历</string>
     <string name="stats_calendar_hint">颜色越深花得越多，点一天看详情。</string>
-    <string name="stats_day_detail">%1$s：%2$s，%3$d 笔</string>
     <string name="stats_day_empty">%1$s：没有记账</string>
     <string name="stats_top_merchants">常去的店</string>
-    <string name="stats_merchant_count">%1$d 次</string>
     <string name="stats_biggest">最大的一笔</string>
 
     <!-- 月度回顾和每月提醒 -->
     <string name="review_title">%1$s回顾</string>
     <string name="review_month_short_pattern">M月</string>
     <string name="review_spent">这个月你花了</string>
-    <string name="review_count_days">%1$d 笔 · %2$d 天有消费</string>
     <string name="review_start">开始回顾</string>
     <string name="review_in_progress">这个月还没过完，先看看到今天为止的。</string>
     <string name="review_empty">这个月还没有记账，记几笔以后再来看。</string>
@@ -122,10 +115,8 @@
     <string name="review_share_of_total">占全部支出的 %1$s</string>
     <string name="review_biggest">这个月最大的一笔</string>
     <string name="review_place_visits">去得最多的地方</string>
-    <string name="review_place_visits_detail">去了 %1$d 次，一共 %2$s</string>
     <string name="review_place_amount">花钱最多的店</string>
     <string name="review_busiest">花钱最多的一天</string>
-    <string name="review_busiest_detail">这天记了 %1$d 笔</string>
     <string name="review_more">比上个月多花了</string>
     <string name="review_less">比上个月少花了</string>
     <string name="review_same">和上个月花得一样多</string>
@@ -187,7 +178,6 @@
     <string name="map_pick_hint">移动地图，让中间的十字对准付款的地方。</string>
     <string name="map_attribution">© OpenStreetMap 贡献者</string>
     <string name="map_empty">这个月还没有带位置的账。付款后马上记账会自动记下位置，以前的账可以在「记一笔」里点「在地图上选」。</string>
-    <string name="map_count">这个月有 %1$d 笔带位置，一共 %2$s</string>
     <string name="settings_location">记账时记下位置</string>
     <string name="settings_location_hint">只在付款后 2 小时内记账时，记下手机当前的位置；更早的账可以在「记一笔」里手动选。</string>
     <string name="settings_location_off">定位权限没开，不会记下位置。</string>
@@ -202,4 +192,60 @@
     <string name="budget_over">已超出预算 %1$s</string>
     <string name="msg_budget_warning">这个月已经花了预算的八成（%1$s / %2$s）</string>
     <string name="msg_budget_over">这个月已经超出预算 %1$s</string>
+
+    <!-- 数量（中文、韩文只有一种写法） -->
+    <plurals name="ledger_month_count">
+        <item quantity="other">共 %1$d 笔</item>
+    </plurals>
+    <plurals name="ledger_unconverted">
+        <item quantity="other">另有 %1$d 笔外币，取得汇率后计入</item>
+    </plurals>
+    <plurals name="import_list_hint">
+        <item quantity="other">截图里有 %1$d 笔支出，勾上要记的。点一笔可以修改。</item>
+    </plurals>
+    <plurals name="msg_saved_several">
+        <item quantity="other">已记下 %1$d 笔</item>
+    </plurals>
+    <plurals name="stats_day_detail">
+        <item quantity="other">%1$s：%2$s，%3$d 笔</item>
+    </plurals>
+    <plurals name="stats_merchant_count">
+        <item quantity="other">%1$d 次</item>
+    </plurals>
+    <plurals name="review_place_visits_detail">
+        <item quantity="other">去了 %1$d 次，一共 %2$s</item>
+    </plurals>
+    <plurals name="review_busiest_detail">
+        <item quantity="other">这天记了 %1$d 笔</item>
+    </plurals>
+    <plurals name="map_count">
+        <item quantity="other">这个月有 %1$d 笔带位置，一共 %2$s</item>
+    </plurals>
+    <plurals name="review_entries">
+        <item quantity="other">%1$d 笔</item>
+    </plurals>
+    <plurals name="review_days">
+        <item quantity="other">%1$d 天有消费</item>
+    </plurals>
+
+    <!-- 读屏和调试 -->
+    <string name="review_next">下一张</string>
+    <string name="review_previous">上一张</string>
+    <string name="settings_demo">演示数据（调试版）</string>
+    <string name="settings_demo_hint">填入两个月的示例账目（带位置、多种货币），用来演示统计、回顾和地图。会先清空现有的账。</string>
+    <string name="settings_demo_fill">清空并填入演示数据</string>
+    <string name="msg_demo_filled">已填入演示数据</string>
+
+    <!-- 导出 CSV -->
+    <string name="settings_data">数据</string>
+    <string name="settings_export_hint">把所有账目存成 CSV 表格，可以用 Excel 或 Google 表格打开；外币另有一列折合成主货币。</string>
+    <string name="settings_export">导出 CSV</string>
+    <string name="csv_currency">货币</string>
+    <string name="csv_in_home">折合 %1$s</string>
+    <string name="csv_latitude">纬度</string>
+    <string name="csv_longitude">经度</string>
+    <string name="msg_export_failed">没能导出，换个位置再试试</string>
+    <plurals name="msg_exported">
+        <item quantity="other">已导出 %1$d 笔</item>
+    </plurals>
 </resources>

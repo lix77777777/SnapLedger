@@ -14,8 +14,6 @@
 
     <!-- Ledger and entry dialog -->
     <string name="ledger_month_total">This month %1$s</string>
-    <string name="ledger_month_count">%1$d entries</string>
-    <string name="ledger_unconverted">%1$d foreign-currency entries will count once rates are available</string>
     <string name="ledger_empty_title">No entries yet</string>
     <string name="ledger_empty_hint">Share a payment screenshot to this app, or use the buttons below</string>
     <string name="add_entry">Add entry</string>
@@ -67,10 +65,8 @@
     <string name="close">Close</string>
 
     <!-- List screenshots (several payments in one) -->
-    <string name="import_list_hint">Found %1$d expenses. Check the ones to save. Tap one to edit it.</string>
     <string name="import_list_save">Save %1$d</string>
     <string name="import_list_duplicate">May be recorded already</string>
-    <string name="msg_saved_several">Saved %1$d entries</string>
 
     <!-- Settings: home currency and exchange rates -->
     <string name="settings_home_currency">Home currency</string>
@@ -103,17 +99,14 @@
     <string name="stats_top_day">Top day: day %1$d, %2$s</string>
     <string name="stats_calendar">Spending calendar</string>
     <string name="stats_calendar_hint">Darker days cost more. Tap a day for details.</string>
-    <string name="stats_day_detail">%1$s: %2$s, %3$d entries</string>
     <string name="stats_day_empty">%1$s: nothing recorded</string>
     <string name="stats_top_merchants">Top places</string>
-    <string name="stats_merchant_count">%1$d visits</string>
     <string name="stats_biggest">Biggest expense</string>
 
     <!-- Monthly review and reminders -->
     <string name="review_title">%1$s in review</string>
     <string name="review_month_short_pattern">MMMM</string>
     <string name="review_spent">This month you spent</string>
-    <string name="review_count_days">%1$d entries · spent on %2$d days</string>
     <string name="review_start">Play the review</string>
     <string name="review_in_progress">This month isn\'t over yet. This covers up to today.</string>
     <string name="review_empty">Nothing recorded this month yet. Come back after a few entries.</string>
@@ -122,10 +115,8 @@
     <string name="review_share_of_total">%1$s of everything</string>
     <string name="review_biggest">Your biggest expense</string>
     <string name="review_place_visits">Your regular spot</string>
-    <string name="review_place_visits_detail">%1$d visits, %2$s in total</string>
     <string name="review_place_amount">Where you spent the most</string>
     <string name="review_busiest">Your biggest day</string>
-    <string name="review_busiest_detail">%1$d entries that day</string>
     <string name="review_more">More than last month</string>
     <string name="review_less">Less than last month</string>
     <string name="review_same">Exactly the same as last month</string>
@@ -187,7 +178,6 @@
     <string name="map_pick_hint">Move the map so the cross sits on the place.</string>
     <string name="map_attribution">© OpenStreetMap contributors</string>
     <string name="map_empty">No entries with a location this month. Entries recorded right after paying get one automatically; for older ones, use Pick on map.</string>
-    <string name="map_count">%1$d entries with a location, %2$s in total</string>
     <string name="settings_location">Save location with new entries</string>
     <string name="settings_location_hint">Only entries recorded within 2 hours of paying get your current location. For older ones, pick it on the map.</string>
     <string name="settings_location_off">Location permission is off, so no location is saved.</string>
@@ -202,4 +192,72 @@
     <string name="budget_over">%1$s over budget</string>
     <string name="msg_budget_warning">You’ve used 80%% of this month’s budget (%1$s / %2$s)</string>
     <string name="msg_budget_over">You’re %1$s over this month’s budget</string>
+
+    <!-- Counts (one / other) -->
+    <plurals name="ledger_month_count">
+        <item quantity="one">%1$d entry</item>
+        <item quantity="other">%1$d entries</item>
+    </plurals>
+    <plurals name="ledger_unconverted">
+        <item quantity="one">%1$d foreign-currency entry will count once rates are available</item>
+        <item quantity="other">%1$d foreign-currency entries will count once rates are available</item>
+    </plurals>
+    <plurals name="import_list_hint">
+        <item quantity="one">Found %1$d expense. Check it to save it. Tap it to edit it.</item>
+        <item quantity="other">Found %1$d expenses. Check the ones to save. Tap one to edit it.</item>
+    </plurals>
+    <plurals name="msg_saved_several">
+        <item quantity="one">Saved %1$d entry</item>
+        <item quantity="other">Saved %1$d entries</item>
+    </plurals>
+    <plurals name="stats_day_detail">
+        <item quantity="one">%1$s: %2$s, %3$d entry</item>
+        <item quantity="other">%1$s: %2$s, %3$d entries</item>
+    </plurals>
+    <plurals name="stats_merchant_count">
+        <item quantity="one">%1$d visit</item>
+        <item quantity="other">%1$d visits</item>
+    </plurals>
+    <plurals name="review_place_visits_detail">
+        <item quantity="one">%1$d visit, %2$s in total</item>
+        <item quantity="other">%1$d visits, %2$s in total</item>
+    </plurals>
+    <plurals name="review_busiest_detail">
+        <item quantity="one">%1$d entry that day</item>
+        <item quantity="other">%1$d entries that day</item>
+    </plurals>
+    <plurals name="map_count">
+        <item quantity="one">%1$d entry with a location, %2$s in total</item>
+        <item quantity="other">%1$d entries with a location, %2$s in total</item>
+    </plurals>
+    <plurals name="review_entries">
+        <item quantity="one">%1$d entry</item>
+        <item quantity="other">%1$d entries</item>
+    </plurals>
+    <plurals name="review_days">
+        <item quantity="one">spent on %1$d day</item>
+        <item quantity="other">spent on %1$d days</item>
+    </plurals>
+
+    <!-- Screen reader and debug -->
+    <string name="review_next">Next card</string>
+    <string name="review_previous">Previous card</string>
+    <string name="settings_demo">Demo data (debug build)</string>
+    <string name="settings_demo_hint">Fills two months of sample entries (with places and several currencies) to demo stats, reviews and the map. Existing entries are removed first.</string>
+    <string name="settings_demo_fill">Replace with demo data</string>
+    <string name="msg_demo_filled">Demo data added</string>
+
+    <!-- CSV export -->
+    <string name="settings_data">Data</string>
+    <string name="settings_export_hint">Saves every entry as a CSV spreadsheet for Excel or Google Sheets. Foreign amounts get an extra column in your home currency.</string>
+    <string name="settings_export">Export CSV</string>
+    <string name="csv_currency">Currency</string>
+    <string name="csv_in_home">In %1$s</string>
+    <string name="csv_latitude">Latitude</string>
+    <string name="csv_longitude">Longitude</string>
+    <string name="msg_export_failed">Couldn\'t export. Try another location</string>
+    <plurals name="msg_exported">
+        <item quantity="one">Exported %1$d entry</item>
+        <item quantity="other">Exported %1$d entries</item>
+    </plurals>
 </resources>

@@ -101,22 +101,23 @@ class ReviewReminder(private val context: Context) {
 /**
  * 到点时 WorkManager 调用：算出上个月花了多少，发通知，再排下个月的。
  * WorkManager 用反射创建它，没法把对象传进来，所以从 [LedgerApplication] 取共用的那一套。
+ *
+ * 下个月的一定要最后排：用 REPLACE 排同名任务时，WorkManager 会把正在跑的这一个也取消掉，
+ * 排在前面的话通知还没发出去就被停了（第 10 步在模拟器上强制运行任务时发现的）。
  */
 class ReviewReminderWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
         val container = (applicationContext as LedgerApplication).container
         val testMonth = inputData.getString(ReviewReminder.KEY_MONTH)
-        if (testMonth == null) {
-            if (!container.settings.reviewReminder) return Result.success()
-            container.reviewReminder.schedule(replace = true)
-        }
+        if (testMonth == null && !container.settings.reviewReminder) return Result.success()
         val zone = ZoneId.systemDefault()
         val month = testMonth?.let(YearMonth::parse) ?: YearMonth.now(zone).minusMonths(1)
         val entries = container.repository.observeEntries().first()
         val rates = RateTable(container.repository.observeRates().first())
         val summary = MonthlyStats.summarize(entries, month, container.settings.homeCurrency, rates, zone)
         if (summary.entryCount > 0) container.reviewReminder.notify(month, Money(summary.totalMinor, summary.currency))
+        if (testMonth == null) container.reviewReminder.schedule(replace = true)
         return Result.success()
     }
 }

@@ -23,9 +23,19 @@ android {
 
     buildTypes {
         release {
+            // R8：删掉用不到的代码和资源。各个库自己带了保留规则，漏掉的补在 proguard-rules.pro。
             optimization {
-                enable = false
+                enable = true
+                keepRules {
+                    files.add(file("proguard-rules.pro"))
+                }
             }
+            // 正式版只打包手机用的 arm64：ML Kit 的识别程序每种 CPU 各有一份，四种都带上 APK 有 58MB。
+            ndk {
+                abiFilters += "arm64-v8a"
+            }
+            // 课程作业不上架商店，用调试签名，生成的 APK 可以直接装到组员的手机上演示。
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {

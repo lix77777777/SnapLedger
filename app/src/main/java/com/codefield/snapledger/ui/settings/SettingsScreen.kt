@@ -1,5 +1,8 @@
 package com.codefield.snapledger.ui.settings
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -40,22 +43,26 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.codefield.snapledger.R
 import com.codefield.snapledger.logic.AmountInput
+import com.codefield.snapledger.logic.CsvLabels
 import com.codefield.snapledger.logic.CurrencyConverter
 import com.codefield.snapledger.logic.RateTable
+import com.codefield.snapledger.model.Category
 import com.codefield.snapledger.model.Currency
 import com.codefield.snapledger.model.Money
 import com.codefield.snapledger.ui.RateStatus
 import com.codefield.snapledger.ui.common.ScreenHeader
+import com.codefield.snapledger.ui.common.categoryName
 import com.codefield.snapledger.ui.common.currencyName
 import com.codefield.snapledger.ui.common.currencySymbol
 import com.codefield.snapledger.ui.common.formatMoney
 import com.codefield.snapledger.ui.common.formatQuote
 import com.codefield.snapledger.ui.common.rememberLocationAccess
 import com.codefield.snapledger.ui.common.rememberNotificationAccess
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-/** 设置：主货币、汇率、每月回顾提醒。预算以后加。 */
+/** 设置：主货币、汇率、预算、位置、每月回顾提醒、导出 CSV；调试版多一个演示数据。 */
 @Composable
 fun SettingsScreen(
     homeCurrency: Currency,
@@ -71,6 +78,9 @@ fun SettingsScreen(
     onRecordLocation: (Boolean) -> Unit,
     budget: Money?,
     onBudget: (Money?) -> Unit,
+    entryCount: Int,
+    onExport: (Uri, CsvLabels) -> Unit,
+    onFillDemo: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -120,6 +130,66 @@ fun SettingsScreen(
         Section(stringResource(R.string.settings_reminders)) {
             ReminderOptions(reviewReminder, onReviewReminder, debug, onTestReminder)
         }
+        Section(stringResource(R.string.settings_data)) {
+            ExportOptions(entryCount, homeCurrency, onExport)
+        }
+        if (debug) {
+            Section(stringResource(R.string.settings_demo)) { DemoOptions(onFillDemo) }
+        }
+    }
+}
+
+/** 导出 CSV：在系统的「另存为」里选好位置（默认文件名带今天的日期），再按当前语言的表头写进去。没有账时按钮是灰的。 */
+@Composable
+private fun ExportOptions(entryCount: Int, homeCurrency: Currency, onExport: (Uri, CsvLabels) -> Unit) {
+    val labels = csvLabels(homeCurrency)
+    val saveAs = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(CSV_TYPE)) { uri ->
+        if (uri != null) onExport(uri, labels)
+    }
+    val fileName = stringResource(R.string.app_name) + "_" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + ".csv"
+    Hint(stringResource(R.string.settings_export_hint))
+    OutlinedButton(onClick = { saveAs.launch(fileName) }, enabled = entryCount > 0) {
+        Text(stringResource(R.string.settings_export))
+    }
+}
+
+/** CSV 的表头和类别名，跟着界面语言；「折合」那一列写上主货币，比如「折合 KRW」。 */
+@Composable
+private fun csvLabels(homeCurrency: Currency): CsvLabels = CsvLabels(
+    date = stringResource(R.string.field_date),
+    time = stringResource(R.string.field_time),
+    merchant = stringResource(R.string.field_merchant),
+    category = stringResource(R.string.field_category),
+    amount = stringResource(R.string.field_amount),
+    currency = stringResource(R.string.csv_currency),
+    inHome = stringResource(R.string.csv_in_home, homeCurrency.name),
+    note = stringResource(R.string.field_note),
+    latitude = stringResource(R.string.csv_latitude),
+    longitude = stringResource(R.string.csv_longitude),
+    categories = Category.entries.associateWith { stringResource(categoryName(it)) },
+)
+
+private const val CSV_TYPE = "text/csv"
+
+/** 调试版：清空账本换成演示数据。会删掉现有的账，所以先确认一次。 */
+@Composable
+private fun DemoOptions(onFillDemo: () -> Unit) {
+    var confirming by rememberSaveable { mutableStateOf(false) }
+    Hint(stringResource(R.string.settings_demo_hint))
+    OutlinedButton(onClick = { confirming = true }) { Text(stringResource(R.string.settings_demo_fill)) }
+    if (confirming) {
+        AlertDialog(
+            onDismissRequest = { confirming = false },
+            title = { Text(stringResource(R.string.settings_demo_fill)) },
+            text = { Text(stringResource(R.string.settings_demo_hint)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    onFillDemo()
+                    confirming = false
+                }) { Text(stringResource(R.string.ok), color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = { TextButton(onClick = { confirming = false }) { Text(stringResource(R.string.cancel)) } },
+        )
     }
 }
 

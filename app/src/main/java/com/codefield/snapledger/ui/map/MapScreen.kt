@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -126,7 +127,7 @@ fun MapScreen(entries: List<Entry>?, rates: RateTable, homeCurrency: Currency, z
                     }
                 }
                 Text(
-                    stringResource(R.string.map_count, located.size, formatMoney(Money(total, homeCurrency))),
+                    pluralStringResource(R.plurals.map_count, located.size, located.size, formatMoney(Money(total, homeCurrency))),
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }

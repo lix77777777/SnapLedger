@@ -1,8 +1,15 @@
 package com.codefield.snapledger.ui.review
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.pluralStringResource
 import com.codefield.snapledger.R
 import com.codefield.snapledger.model.Persona
+
+/** 「13 笔 · 3 天有消费」：两个数各自按单复数写（英文是 1 entry / 2 entries）。 */
+@Composable
+internal fun countAndDays(entries: Int, days: Int): String =
+    pluralStringResource(R.plurals.review_entries, entries, entries) + " · " + pluralStringResource(R.plurals.review_days, days, days)
 
 /** 消费性格的表情、名字和一句话说明。 */
 internal fun personaEmoji(persona: Persona): String = when (persona) {

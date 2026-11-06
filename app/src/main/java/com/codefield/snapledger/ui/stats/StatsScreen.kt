@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -148,7 +149,7 @@ private fun TotalCard(summary: MonthSummary) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(stringResource(R.string.stats_total), style = MaterialTheme.typography.labelLarge)
             Text(formatMoney(Money(summary.totalMinor, summary.currency)), style = MaterialTheme.typography.headlineMedium)
-            Text(stringResource(R.string.ledger_month_count, summary.entryCount), style = MaterialTheme.typography.bodyMedium)
+            Text(pluralStringResource(R.plurals.ledger_month_count, summary.entryCount, summary.entryCount), style = MaterialTheme.typography.bodyMedium)
             val previous = summary.previousTotalMinor
             if (previous != null) {
                 val difference = formatMoney(Money(abs(summary.totalMinor - previous), summary.currency))
@@ -160,7 +161,7 @@ private fun TotalCard(summary: MonthSummary) {
                 Text(text, style = MaterialTheme.typography.bodyMedium)
             }
             if (summary.unconvertedCount > 0) {
-                Text(stringResource(R.string.ledger_unconverted, summary.unconvertedCount), style = MaterialTheme.typography.bodySmall)
+                Text(pluralStringResource(R.plurals.ledger_unconverted, summary.unconvertedCount, summary.unconvertedCount), style = MaterialTheme.typography.bodySmall)
             }
         }
     }
@@ -346,7 +347,7 @@ private fun SpendingCalendar(month: YearMonth, summary: MonthSummary, entries: L
         val minor = summary.byDay[date]
         Text(
             if (count == 0) stringResource(R.string.stats_day_empty, dateText)
-            else stringResource(R.string.stats_day_detail, dateText, formatMoney(Money(minor ?: 0L, summary.currency)), count),
+            else pluralStringResource(R.plurals.stats_day_detail, count, dateText, formatMoney(Money(minor ?: 0L, summary.currency)), count),
             style = MaterialTheme.typography.bodyMedium,
         )
     }
@@ -359,7 +360,7 @@ private fun TopList(summary: MonthSummary, zone: ZoneId) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(merchant.merchant, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             Text(
-                stringResource(R.string.stats_merchant_count, merchant.count),
+                pluralStringResource(R.plurals.stats_merchant_count, merchant.count, merchant.count),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

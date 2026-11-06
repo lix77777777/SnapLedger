@@ -1,6 +1,7 @@
 package com.codefield.snapledger.ui.review
 
 import android.graphics.Bitmap
+import android.view.accessibility.AccessibilityManager
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -54,8 +55,12 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -120,9 +125,14 @@ fun StoryScreen(
         val current = index.coerceIn(0, cards.lastIndex)
         var paused by remember { mutableStateOf(false) }
         val progress = remember(current) { Animatable(0f) }
+        // 开着读屏（TalkBack）时不自动翻页，读完一张再用「下一张」翻。
+        val context = LocalContext.current
+        val screenReader = remember { context.getSystemService(AccessibilityManager::class.java)?.isTouchExplorationEnabled == true }
+        val nextLabel = stringResource(R.string.review_next)
+        val previousLabel = stringResource(R.string.review_previous)
         // 暂停时这个效果被取消，进度停在原地；松手后从停下的地方接着走。
         LaunchedEffect(current, paused) {
-            if (paused) return@LaunchedEffect
+            if (paused || screenReader) return@LaunchedEffect
             val remaining = ((1f - progress.value) * CARD_MILLIS).roundToInt()
             progress.animateTo(1f, tween(durationMillis = remaining, easing = LinearEasing))
             if (current < cards.lastIndex) index = current + 1
@@ -136,6 +146,18 @@ fun StoryScreen(
                 },
                 modifier = Modifier
                     .fillMaxSize()
+                    .semantics {
+                        customActions = listOf(
+                            CustomAccessibilityAction(nextLabel) {
+                                index = (index + 1).coerceAtMost(cards.lastIndex)
+                                true
+                            },
+                            CustomAccessibilityAction(previousLabel) {
+                                index = (index - 1).coerceAtLeast(0)
+                                true
+                            },
+                        )
+                    }
                     .pointerInput(cards.size) {
                         detectTapGestures(
                             onPress = {
@@ -234,7 +256,7 @@ private fun CoverCard(review: MonthReview) {
     Spacer(Modifier.height(24.dp))
     Eyebrow(stringResource(R.string.review_spent))
     CountUpMoney(summary.totalMinor, summary.currency)
-    Text(stringResource(R.string.review_count_days, summary.entryCount, review.activeDays), style = MaterialTheme.typography.bodyLarge)
+    Text(countAndDays(summary.entryCount, review.activeDays), style = MaterialTheme.typography.bodyLarge)
     Spacer(Modifier.height(32.dp))
     Text(
         stringResource(R.string.review_tap_hint),
@@ -278,7 +300,7 @@ private fun PlaceCard(review: MonthReview) {
     BigEmoji("📍")
     Headline(place.merchant)
     Text(
-        if (place.visits >= 2) stringResource(R.string.review_place_visits_detail, place.visits, money) else money,
+        if (place.visits >= 2) pluralStringResource(R.plurals.review_place_visits_detail, place.visits, place.visits, money) else money,
         style = MaterialTheme.typography.titleLarge,
     )
 }
@@ -290,7 +312,7 @@ private fun BusiestDayCard(review: MonthReview) {
     BigEmoji("🔥")
     Headline(dayText(day.date))
     CountUpMoney(day.minor, review.summary.currency)
-    Text(stringResource(R.string.review_busiest_detail, day.count), style = MaterialTheme.typography.bodyLarge)
+    Text(pluralStringResource(R.plurals.review_busiest_detail, day.count, day.count), style = MaterialTheme.typography.bodyLarge)
 }
 
 @Composable

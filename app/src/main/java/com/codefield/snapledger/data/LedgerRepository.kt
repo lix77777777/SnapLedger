@@ -33,6 +33,12 @@ class LedgerRepository(
 
     suspend fun delete(id: Long) = entries.delete(id)
 
+    /** 清空再换成另一批账（调试版的演示数据）。 */
+    suspend fun replaceAll(list: List<Entry>) {
+        entries.deleteAll()
+        addAll(list)
+    }
+
     /** 存下来的各天汇率，按日期从早到晚。 */
     fun observeRates(): Flow<List<DailyRates>> = rates.observeAll().map(RateMapper::toModel)
 
