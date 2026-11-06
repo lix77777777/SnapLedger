@@ -99,7 +99,7 @@ internal object AmountFinder {
             if (!grouped && (wordBefore(line, numberStart) || line.getOrNull(numberEnd)?.let { it in 'A'..'Z' } == true)) return null
             val next = line.drop(numberEnd).trimStart().firstOrNull()
             if (next != null && next in COUNT_SUFFIXES) return null
-            // 没有逗号的长数字是订单号、卡号、电话号码；括号里的是卡号尾号「(7991)」。
+            // 没有逗号的长数字是订单号、卡号、电话号码；括号里的是卡号尾号「(1234)」。
             if (integer.length >= 7 && !grouped) return null
             if (line.getOrNull(numberStart - 1) == '(' && line.getOrNull(numberEnd) == ')') return null
         }

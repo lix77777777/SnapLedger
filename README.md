@@ -21,13 +21,16 @@
 ./gradlew assembleDebug        # 调试版，设置里有「演示数据」
 ./gradlew assembleRelease      # 正式版：只打包 arm64，开 R8，16MB
 ./gradlew testDebugUnitTest    # 单元测试（106 个）
+./gradlew connectedDebugAndroidTest   # 界面测试（7 个，要开着模拟器）
 ```
+
+界面测试跑完后 Gradle 会把 App 卸载，设备上的账会一起删掉，所以请用模拟器跑，别用自己记账的手机。想保留 App 的话加上 `-Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true`。
 
 minSdk 26（Android 8.0），用到 Kotlin、Jetpack Compose、Room、WorkManager、ML Kit 文字识别、osmdroid、Coil、kotlinx.serialization。
 
 ## 文件夹
 
 - `app/src/main/java/com/codefield/snapledger/`：`model` 数据类、`logic` 记账规则（纯 Kotlin）、`data` 数据库和设置、`remote` 汇率接口、`system` 识别/定位/通知/分享、`ui` 界面。除了 `ui`，每个文件夹里都有一个 README 说明它管什么。
-- `app/src/test/`：规则的单元测试。
+- `app/src/test/`：规则的单元测试；`app/src/androidTest/`：界面测试。
 - `docs/开发步骤.md`：步骤、定下的事、文件夹分工、和课程内容的对应。
 - `docs/质量指标.md`：测试、识别准确度、速度、APK 大小。

@@ -34,8 +34,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -297,17 +295,18 @@ fun SnapLedgerApp(viewModel: LedgerViewModel = viewModel(factory = LedgerViewMod
     )
 }
 
-/** 账本页右下角：大按钮是识别截图（主要的记账方式），上面的小按钮是手动记一笔。 */
+/** 账本页右下角：大按钮是识别截图（主要的记账方式），上面的小按钮是手动记一笔。internal 是为了界面测试。 */
 @Composable
-private fun AddButtons(onScan: () -> Unit, onAdd: () -> Unit) {
+internal fun AddButtons(onScan: () -> Unit, onAdd: () -> Unit) {
     Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(16.dp)) {
         val addLabel = stringResource(R.string.add_manually)
+        // 名字写在图标上，按钮会把它和点击操作合在一起交给读屏。
+        // 不能在按钮上用 clearAndSetSemantics：它连点击操作也清掉了，读屏能念出名字却点不了（界面测试发现的）。
         SmallFloatingActionButton(
             onClick = onAdd,
             containerColor = MaterialTheme.colorScheme.secondaryContainer,
-            modifier = Modifier.clearAndSetSemantics { contentDescription = addLabel },
         ) {
-            Icon(painterResource(R.drawable.ic_add), contentDescription = null)
+            Icon(painterResource(R.drawable.ic_add), contentDescription = addLabel)
         }
         // 带图标的扩展按钮会把文字从读屏信息里清掉（按钮收起时只剩图标），所以按钮的名字要写在图标上。
         val scanLabel = stringResource(R.string.import_screenshot)
