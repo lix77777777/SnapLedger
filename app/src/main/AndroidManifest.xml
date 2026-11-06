@@ -3,6 +3,8 @@
 
     <!-- 只用来下载汇率；截图识别不联网。 -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 每月 1 号的回顾提醒（安卓 13 起要用户同意）。 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".LedgerApplication"
@@ -34,6 +36,17 @@
                 <data android:mimeType="image/*" />
             </intent-filter>
         </activity>
+
+        <!-- 把回顾卡片的图片分享给别的应用（只开放缓存里的 shared/ 文件夹）。 -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
     </application>
 
 </manifest>

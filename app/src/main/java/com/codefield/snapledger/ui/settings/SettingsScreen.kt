@@ -19,6 +19,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -37,10 +38,11 @@ import com.codefield.snapledger.ui.common.ScreenHeader
 import com.codefield.snapledger.ui.common.currencyName
 import com.codefield.snapledger.ui.common.currencySymbol
 import com.codefield.snapledger.ui.common.formatQuote
+import com.codefield.snapledger.ui.common.rememberNotificationAccess
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-/** 设置：主货币和汇率。预算、导出以后加。 */
+/** 设置：主货币、汇率、每月回顾提醒。预算以后加。 */
 @Composable
 fun SettingsScreen(
     homeCurrency: Currency,
@@ -48,6 +50,10 @@ fun SettingsScreen(
     rates: RateTable,
     rateStatus: RateStatus,
     onUpdateRates: () -> Unit,
+    reviewReminder: Boolean,
+    onReviewReminder: (Boolean) -> Unit,
+    debug: Boolean,
+    onTestReminder: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -88,6 +94,38 @@ fun SettingsScreen(
             Hint(stringResource(R.string.rates_rule))
             Hint(stringResource(R.string.rates_source))
         }
+        Section(stringResource(R.string.settings_reminders)) {
+            ReminderOptions(reviewReminder, onReviewReminder, debug, onTestReminder)
+        }
+    }
+}
+
+/** 每月回顾提醒的开关。打开时如果还没有通知权限，顺便申请。调试版多一个马上发测试提醒的按钮。 */
+@Composable
+private fun ReminderOptions(reviewReminder: Boolean, onReviewReminder: (Boolean) -> Unit, debug: Boolean, onTestReminder: () -> Unit) {
+    val notifications = rememberNotificationAccess()
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            stringResource(R.string.settings_review_reminder),
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f),
+        )
+        Switch(
+            checked = reviewReminder,
+            onCheckedChange = { on ->
+                onReviewReminder(on)
+                if (on && !notifications.granted) notifications.request()
+            },
+        )
+    }
+    if (reviewReminder && !notifications.granted) {
+        Text(stringResource(R.string.settings_notifications_off), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+        OutlinedButton(onClick = notifications.request) {
+            Text(stringResource(if (notifications.denied) R.string.review_notify_settings else R.string.review_notify_on))
+        }
+    }
+    if (debug) {
+        OutlinedButton(onClick = onTestReminder) { Text(stringResource(R.string.settings_test_reminder)) }
     }
 }
 

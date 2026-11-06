@@ -3,31 +3,19 @@ package com.codefield.snapledger.ui.common
 import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.Color
 import com.codefield.snapledger.R
+import com.codefield.snapledger.logic.MoneyFormat
 import com.codefield.snapledger.logic.RateQuote
 import com.codefield.snapledger.model.Category
 import com.codefield.snapledger.model.Currency
 import com.codefield.snapledger.model.Money
-import java.math.BigDecimal
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
 
-/** 金额显示成「₩6,500」「¥23.50」「$12.99」。千位分隔符统一用逗号。 */
-fun formatMoney(money: Money): String {
-    val digits = money.currency.fractionDigits
-    val pattern = if (digits == 0) "#,##0" else "#,##0." + "0".repeat(digits)
-    val format = DecimalFormat(pattern, DecimalFormatSymbols(Locale.US))
-    return currencySymbol(money.currency) + format.format(BigDecimal(money.minor).movePointLeft(digits))
-}
+/** 金额显示成「₩6,500」「¥23.50」，见 [MoneyFormat]。 */
+fun formatMoney(money: Money): String = MoneyFormat.format(money)
 
-/** 日元和人民币都用 ¥，日元写成「JP¥」区分开。 */
-fun currencySymbol(currency: Currency): String = when (currency) {
-    Currency.KRW -> "₩"
-    Currency.CNY -> "¥"
-    Currency.USD -> "$"
-    Currency.JPY -> "JP¥"
-    Currency.EUR -> "€"
-}
+fun currencySymbol(currency: Currency): String = MoneyFormat.symbol(currency)
 
 /** 汇率显示成「1 CNY = ₩201.08」「1,000 KRW = ¥4.97」。 */
 fun formatQuote(quote: RateQuote, from: Currency, to: Currency): String {

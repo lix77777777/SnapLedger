@@ -61,6 +61,7 @@ import com.codefield.snapledger.model.Currency
 import com.codefield.snapledger.model.Entry
 import com.codefield.snapledger.model.Money
 import com.codefield.snapledger.model.MonthSummary
+import com.codefield.snapledger.ui.common.MonthSwitcher
 import com.codefield.snapledger.ui.common.ScreenHeader
 import com.codefield.snapledger.ui.common.categoryColor
 import com.codefield.snapledger.ui.common.categoryEmoji
@@ -134,33 +135,6 @@ fun StatsScreen(
         if (summary.topMerchants.isNotEmpty() || summary.biggest != null) {
             Section(stringResource(R.string.stats_top_merchants)) { TopList(summary, zone) }
         }
-    }
-}
-
-@Composable
-private fun MonthSwitcher(month: YearMonth, canGoBack: Boolean, canGoForward: Boolean, onMonth: (YearMonth) -> Unit) {
-    val locale = LocalConfiguration.current.locales[0]
-    val pattern = stringResource(R.string.stats_month_pattern)
-    val format = remember(pattern, locale) { DateTimeFormatter.ofPattern(pattern, locale) }
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        val previous = stringResource(R.string.stats_prev_month)
-        val next = stringResource(R.string.stats_next_month)
-        TextButton(
-            onClick = { onMonth(month.minusMonths(1)) },
-            enabled = canGoBack,
-            modifier = Modifier.semantics { contentDescription = previous },
-        ) { Text("‹", style = MaterialTheme.typography.headlineSmall) }
-        Text(
-            month.format(format),
-            style = MaterialTheme.typography.titleLarge,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.weight(1f),
-        )
-        TextButton(
-            onClick = { onMonth(month.plusMonths(1)) },
-            enabled = canGoForward,
-            modifier = Modifier.semantics { contentDescription = next },
-        ) { Text("›", style = MaterialTheme.typography.headlineSmall) }
     }
 }
 

@@ -28,6 +28,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -44,13 +45,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.codefield.snapledger.R
+import com.codefield.snapledger.logic.MonthlyReview
 import com.codefield.snapledger.logic.MonthlyStats
 import com.codefield.snapledger.ui.ledger.ImportDialog
 import com.codefield.snapledger.ui.ledger.LedgerScreen
 import com.codefield.snapledger.ui.map.MapScreen
 import com.codefield.snapledger.ui.review.ReviewScreen
+import com.codefield.snapledger.ui.review.StoryScreen
 import com.codefield.snapledger.ui.settings.SettingsScreen
 import com.codefield.snapledger.ui.stats.StatsScreen
+import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
 import kotlinx.coroutines.launch
@@ -61,6 +65,10 @@ object Routes {
     const val REVIEW = "review"
     const val MAP = "map"
     const val SETTINGS = "settings"
+    /** 某个月的回顾卡片，全屏，没有底部菜单。 */
+    const val REVIEW_STORY = "review_story/{month}"
+
+    fun reviewStory(month: YearMonth) = "review_story/$month"
 }
 
 /** 底部菜单里的四个主页面。设置从账本页右上角进入，不放在底部菜单。 */
@@ -85,6 +93,8 @@ fun SnapLedgerApp(viewModel: LedgerViewModel = viewModel(factory = LedgerViewMod
     val rates by viewModel.rates.collectAsStateWithLifecycle()
     val homeCurrency by viewModel.homeCurrency.collectAsStateWithLifecycle()
     val rateStatus by viewModel.rateStatus.collectAsStateWithLifecycle()
+    val reviewReminder by viewModel.reviewReminder.collectAsStateWithLifecycle()
+    val openReview by viewModel.openReview.collectAsStateWithLifecycle()
     val zone = remember { ZoneId.systemDefault() }
     val summary = remember(entries, rates, homeCurrency) {
         entries?.let { MonthlyStats.summarize(it, YearMonth.now(zone), homeCurrency, rates, zone) }
@@ -107,6 +117,7 @@ fun SnapLedgerApp(viewModel: LedgerViewModel = viewModel(factory = LedgerViewMod
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val resources = LocalResources.current
+    val context = LocalContext.current
 
     // 保存、删除的提示。删除的提示可以撤销。
     LaunchedEffect(viewModel) {
@@ -169,7 +180,34 @@ fun SnapLedgerApp(viewModel: LedgerViewModel = viewModel(factory = LedgerViewMod
                 )
             }
             composable(Routes.STATS) { StatsScreen(entries = entries, rates = rates, homeCurrency = homeCurrency, zone = zone) }
-            composable(Routes.REVIEW) { ReviewScreen() }
+            composable(Routes.REVIEW) {
+                ReviewScreen(
+                    entries = entries,
+                    rates = rates,
+                    homeCurrency = homeCurrency,
+                    zone = zone,
+                    reminderOn = reviewReminder,
+                    onOpenStory = { navController.navigate(Routes.reviewStory(it)) },
+                )
+            }
+            composable(Routes.REVIEW_STORY) { backStackEntry ->
+                val month = backStackEntry.arguments?.getString("month")
+                    ?.let { runCatching { YearMonth.parse(it) }.getOrNull() } ?: YearMonth.now(zone)
+                StoryScreen(
+                    month = month,
+                    entries = entries,
+                    rates = rates,
+                    homeCurrency = homeCurrency,
+                    zone = zone,
+                    onClose = { navController.popBackStack() },
+                    onShare = { bitmap ->
+                        scope.launch {
+                            val title = resources.getString(R.string.review_share_title)
+                            context.startActivity(viewModel.shareImage(bitmap, "review-$month", title))
+                        }
+                    },
+                )
+            }
             composable(Routes.MAP) { MapScreen() }
             composable(Routes.SETTINGS) {
                 SettingsScreen(
@@ -178,10 +216,24 @@ fun SnapLedgerApp(viewModel: LedgerViewModel = viewModel(factory = LedgerViewMod
                     rates = rates,
                     rateStatus = rateStatus,
                     onUpdateRates = { viewModel.refreshRates(force = true) },
+                    reviewReminder = reviewReminder,
+                    onReviewReminder = viewModel::setReviewReminder,
+                    debug = viewModel.debuggable,
+                    onTestReminder = {
+                        val today = LocalDate.now(zone)
+                        viewModel.sendTestReminder(entries?.let { MonthlyReview.defaultMonth(it, today, zone) } ?: YearMonth.from(today))
+                    },
                     onBack = { navController.popBackStack() },
                 )
             }
         }
+    }
+
+    // 点了「回顾做好了」的通知：直接打开那个月的回顾卡片。
+    LaunchedEffect(openReview) {
+        val month = openReview ?: return@LaunchedEffect
+        navController.navigate(Routes.reviewStory(month))
+        viewModel.reviewOpened()
     }
 
     // 截图记账的对话框放在最外层：从别的应用分享过来时，不管在哪个页面都会弹出来。

@@ -20,8 +20,14 @@ class SettingsStore(context: Context) {
         get() = prefs.getLong(KEY_RATES_CHECKED_AT, 0L)
         set(value) = prefs.edit { putLong(KEY_RATES_CHECKED_AT, value) }
 
+    /** 每月 1 号提醒看回顾，默认开着。 */
+    var reviewReminder: Boolean
+        get() = prefs.getBoolean(KEY_REVIEW_REMINDER, true)
+        set(value) = prefs.edit { putBoolean(KEY_REVIEW_REMINDER, value) }
+
     private companion object {
         const val KEY_HOME_CURRENCY = "home_currency"
         const val KEY_RATES_CHECKED_AT = "rates_checked_at"
+        const val KEY_REVIEW_REMINDER = "review_reminder"
     }
 }

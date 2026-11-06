@@ -1,5 +1,7 @@
 package com.codefield.snapledger.ui
 
+import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -20,6 +22,7 @@ import com.codefield.snapledger.model.Source
 import java.io.File
 import java.io.IOException
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.ZoneId
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -94,6 +97,16 @@ class LedgerViewModel(
     val rateStatus: StateFlow<RateStatus> = _rateStatus.asStateFlow()
     private var updatingRates: Job? = null
 
+    private val _reviewReminder = MutableStateFlow(container.settings.reviewReminder)
+    val reviewReminder: StateFlow<Boolean> = _reviewReminder.asStateFlow()
+
+    /** 点了回顾提醒的通知，等着打开的那个月；打开以后清掉。 */
+    private val _openReview = MutableStateFlow<YearMonth?>(null)
+    val openReview: StateFlow<YearMonth?> = _openReview.asStateFlow()
+
+    /** 调试版才显示「测试提醒」按钮。 */
+    val debuggable: Boolean get() = container.debuggable
+
     private val _messages = MutableSharedFlow<LedgerMessage>(extraBufferCapacity = 8)
     val messages: SharedFlow<LedgerMessage> = _messages.asSharedFlow()
 
@@ -124,6 +137,27 @@ class LedgerViewModel(
         container.settings.homeCurrency = currency
         _homeCurrency.value = currency
     }
+
+    fun setReviewReminder(enabled: Boolean) {
+        container.settings.reviewReminder = enabled
+        _reviewReminder.value = enabled
+        if (enabled) container.reviewReminder.schedule() else container.reviewReminder.cancel()
+    }
+
+    /** 调试用：马上发一条这个月份的回顾提醒。 */
+    fun sendTestReminder(month: YearMonth) = container.reviewReminder.sendNow(month)
+
+    fun openReview(month: YearMonth) {
+        _openReview.value = month
+    }
+
+    fun reviewOpened() {
+        _openReview.value = null
+    }
+
+    /** 把回顾的总结卡存成图片，返回系统的分享面板。 */
+    suspend fun shareImage(bitmap: Bitmap, name: String, chooserTitle: String): Intent =
+        container.imageSharer.shareIntent(bitmap, name, chooserTitle)
 
     /**
      * 补上缺少的汇率。启动、回到前台、记了账之后调用；隔 [RATE_CHECK_INTERVAL_MS] 才看一次有没有新汇率。
