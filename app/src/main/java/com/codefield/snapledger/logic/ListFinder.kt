@@ -9,7 +9,8 @@ internal data class ListRow(val amount: Money, val income: Boolean, val merchant
 
 /**
  * 认出账单、流水、付款通知这类一张图里有好几笔的截图，把每一笔分开。
- * 列表的特点是同一种格式重复好几次：每一笔都有一个差不多大的金额，流水带正负号，付款通知带货币符号。
+ * 列表的特点是同一种格式重复好几次：每一笔都有一个差不多大的金额，流水带正负号，付款通知带货币符号，
+ * 卡的消费明细是「名字 + 行尾金额」一行一笔。
  * 两个金额之间的那几行按上下的空隙分给两边：同一笔里的行挨得近，两笔之间空得多。
  */
 internal object ListFinder {
@@ -17,13 +18,26 @@ internal object ListFinder {
     /** 字的高度至少是最大的那个金额的这么多，才算「差不多大」。 */
     private const val SIMILAR_HEIGHT = 0.7
 
+    /** 没有正负号、货币符号可看时，「名字 + 行尾金额」的行至少要有这么多才算明细；少了多半只是付款页上的几个数。 */
+    private const val MIN_ROWS = 3
+
+    /** 行尾的金额后面最多还能跟几个字。 */
+    private const val ROW_TAIL = 2
+
     /** 不是列表时返回空的。 */
     fun find(texts: List<String>, lines: List<OcrLine>, candidates: List<AmountCandidate>, now: Long, zone: ZoneId): List<ListRow> {
         val usable = candidates.filterNot { it.balance }
-        // 流水看正负号（深色背景上「원」常常认不出来，正负号认得出）；付款通知没有正负号，看货币符号。
+        // 流水看正负号（深色背景上「원」常常认不出来，正负号认得出）；付款通知没有正负号，看货币符号；
+        // 卡的消费明细常常两样都没有，看「左边名字、行尾金额」这样的行重复了几次。
         val signed = similarSize(usable.filter { it.sign != null })
-        val amounts = (if (signed.size >= 2) signed else similarSize(usable.filter { it.marked }))
-            .groupBy { it.lineIndex }.values.map { same -> same.maxBy { it.score } }
+        val marked = similarSize(usable.filter { it.marked })
+        val rows = similarSize(usable.filter { isRow(texts[it.lineIndex], it) })
+        val picked = when {
+            signed.size >= 2 -> signed
+            rows.size >= MIN_ROWS && rows.size > marked.size -> rows
+            else -> marked
+        }
+        val amounts = picked.groupBy { it.lineIndex }.values.map { same -> same.maxBy { it.score } }
             .sortedBy { it.lineIndex }
         if (amounts.size < 2) return emptyList()
         // 有的写着「결제금액」「合计」、有的没写：是一张付款页上的实付金额和明细，不是列表。
@@ -40,6 +54,15 @@ internal object ListFinder {
             )
         }
     }
+
+    /**
+     * 消费明细的一行：左边是名字，金额在行尾（「이마트24 한빛대점 5,300」）。金额要带千位逗号或货币单位，
+     * 后面最多再跟一两个字（「원」常被认成「l」）。
+     */
+    private fun isRow(text: String, amount: AmountCandidate): Boolean =
+        (amount.grouped || amount.marked) &&
+            text.drop(amount.end).count { !it.isWhitespace() } <= ROW_TAIL &&
+            MerchantFinder.onLine(text, amount.start) != null
 
     private fun similarSize(amounts: List<AmountCandidate>): List<AmountCandidate> {
         val max = amounts.maxOfOrNull { it.height } ?: return emptyList()

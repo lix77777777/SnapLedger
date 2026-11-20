@@ -22,6 +22,10 @@ internal object MerchantFinder {
         "使用", "储蓄卡", "儲蓄卡", "信用卡", "借记卡", "详情", "明细", "设置",
         "payment", "paid", "success", "completed", "receipt",
     )
+    /** 明细页里「栏目名 + 内容」的行（「거래구분 공과금」「수수료 면제」），以这些栏目名开头的不是商家名。 */
+    private val FIELDS = listOf("거래구분", "추가메모", "수수료")
+    /** 转账页上收款人后面的「님에게」「님께」。 */
+    private val RECIPIENT = Regex("""님(에게|께)$""")
     private val AMOUNT_WITH_MARKER = Regex("""(₩|¥|\$|€)\s*\d|\d\s*(원|元|円)""")
     private const val MIN_SCORE = 2
     /** 往金额上面找商家名时，最多看几行。 */
@@ -69,12 +73,13 @@ internal object MerchantFinder {
         return score
     }
 
-    private fun clean(text: String): String = text.trim { it.isWhitespace() || it in JUNK || it in '①'..'⓿' }
+    private fun clean(text: String): String =
+        text.trim { it.isWhitespace() || it in JUNK || it in '①'..'⓿' }.replace(RECIPIENT, "")
 
     private fun isNameLike(text: String): Boolean {
         if (text.length !in 2..40 || text.none { it.isLetter() }) return false
         val lower = text.lowercase()
-        if (STATUS.any { it in lower } || lower in KEYS) return false
+        if (STATUS.any { it in lower } || lower in KEYS || FIELDS.any { lower.startsWith(it) }) return false
         if (AMOUNT_WITH_MARKER.containsMatchIn(text) || DateTimeFinder.spans(text).isNotEmpty()) return false
         return text.count { it.isDigit() } * 2 <= text.length
     }

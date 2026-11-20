@@ -11,6 +11,8 @@ import kotlin.math.roundToInt
  * @param balance 旁边写着「잔액」「余额」这类词：是余额、积分，不是这次付的钱。
  * @param labelled 旁边写着「결제금액」「实付」「합계」这类词。
  * @param start 金额（连同正负号、货币符号）在这一行里从第几个字开始。列表里前面的字常常是商家名。
+ * @param end 金额（连同后面的单位）在这一行里到第几个字为止（不含）。
+ * @param grouped 带千位逗号（「12,500」）。没有货币符号时，带逗号的数字才比较像钱。
  */
 internal data class AmountCandidate(
     val money: Money,
@@ -22,6 +24,8 @@ internal data class AmountCandidate(
     val balance: Boolean = false,
     val labelled: Boolean = false,
     val start: Int = 0,
+    val end: Int = 0,
+    val grouped: Boolean = false,
 )
 
 /**
@@ -97,6 +101,8 @@ internal object AmountFinder {
             // 和英文连在一起的数字是名字、型号的一部分：「GS25」「5G」。前面只有一个 W 时可能是没认出来的 ₩，不算。
             // 带千位逗号的不会是型号，后面的字母多半是认错的「원」（「10,0002A」）。
             if (!grouped && (wordBefore(line, numberStart) || line.getOrNull(numberEnd)?.let { it in 'A'..'Z' } == true)) return null
+            // 紧跟在韩文后面的也是：「지에스25」「이마트24」，还有卡的消费明细里的「본인1234」。
+            if (!grouped && line.getOrNull(numberStart - 1)?.let { it in '가'..'힣' } == true) return null
             val next = line.drop(numberEnd).trimStart().firstOrNull()
             if (next != null && next in COUNT_SUFFIXES) return null
             // 没有逗号的长数字是订单号、卡号、电话号码；括号里的是卡号尾号「(1234)」。
@@ -123,7 +129,10 @@ internal object AmountFinder {
         if (balance) score -= 6
         if (minor == 0L) score -= 5
         if (maxHeight > 0) score += (3.0 * height / maxHeight).roundToInt()
-        return AmountCandidate(Money(minor, currency), index, score, height, sign, hasMarker, balance, labelled, signAt ?: markerStart)
+        return AmountCandidate(
+            Money(minor, currency), index, score, height, sign, hasMarker, balance, labelled,
+            start = signAt ?: markerStart, end = m.range.last + 1, grouped = grouped,
+        )
     }
 
     /** 数字（或货币符号）前面的正负号在第几个字。卡号「****-5678」里的减号不算，减号前面得是行首、空格或冒号。 */

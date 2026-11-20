@@ -12,7 +12,8 @@ import java.time.ZoneId
  */
 internal object DateTimeFinder {
 
-    private val FULL_DATE = Regex("""(20\d{2})\s*[.\-/년年]\s*(\d{1,2})\s*[.\-/월月]\s*(\d{1,2})\s*[일日号]?""")
+    /** 月和日之间的点有时被认成逗号，或者多出一个逗号（「2026.10,17」「2026.10.,18」）。 */
+    private val FULL_DATE = Regex("""(20\d{2})\s*[.\-/년年]\s*(\d{1,2})\s*[.,\-/월月],?\s*(\d{1,2})\s*[일日号]?""")
     private val SHORT_DATE = Regex("""(?<![\d.])(\d{1,2})\s*(?:[월月]\s*(\d{1,2})\s*[일日号]?|/(\d{1,2}))(?![\d/])""")
     private val TIME = Regex("""(오전|오후|上午|下午|AM|PM|am|pm)?\s*(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\s*(AM|PM|am|pm))?""")
     private val PHONE = Regex("""\d{2,4}-\d{3,4}-\d{4}""")

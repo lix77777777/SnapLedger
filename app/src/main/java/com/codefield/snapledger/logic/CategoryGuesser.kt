@@ -20,7 +20,7 @@ object CategoryGuesser {
             "kfc", "麦当劳", "火锅", "面馆", "restaurant",
         ),
         Category.GROCERY to listOf(
-            "편의점", "gs25", "cu", "세븐일레븐", "7-eleven", "7eleven", "이마트24", "emart24", "이마트", "emart",
+            "편의점", "gs25", "지에스25", "cu", "세븐일레븐", "7-eleven", "7eleven", "이마트24", "emart24", "이마트", "emart",
             "홈플러스", "롯데마트", "gs더프레시", "지에스더프레시", "다이소", "daiso", "便利店", "超市", "盒马", "全家",
             "familymart", "罗森", "lawson",
         ),
@@ -35,13 +35,15 @@ object CategoryGuesser {
         Category.HEALTH to listOf(
             "병원", "의원", "약국", "치과", "한의원", "医院", "药店", "药房", "诊所", "pharmacy", "clinic", "hospital",
         ),
-        Category.EDUCATION to listOf("교보문고", "영풍문고", "서점", "학원", "등록금", "书店", "学费", "培训", "bookstore"),
+        Category.EDUCATION to listOf(
+            "교보문고", "영풍문고", "서점", "학원", "등록금", "대학교", "书店", "学费", "培训", "bookstore",
+        ),
         Category.TRAVEL to listOf(
             "호텔", "hotel", "숙박", "야놀자", "여기어때", "에어비앤비", "airbnb", "대한항공", "아시아나", "항공",
             "酒店", "机票", "携程", "航空", "agoda",
         ),
         Category.HOUSING to listOf(
-            "관리비", "월세", "전기요금", "가스요금", "수도요금", "통신요금", "房租", "物业", "电费", "水费", "燃气", "话费", "宽带",
+            "관리비", "월세", "전기요금", "가스요금", "수도요금", "통신요금", "공과금", "한국전력", "房租", "物业", "电费", "水费", "燃气", "话费", "宽带",
         ),
         Category.SHOPPING to listOf(
             "쿠팡", "coupang", "올리브영", "무신사", "musinsa", "지마켓", "gmarket", "11번가", "淘宝", "taobao", "天猫",

@@ -20,7 +20,7 @@
 ```
 ./gradlew assembleDebug        # 调试版，设置里有「演示数据」
 ./gradlew assembleRelease      # 正式版：只打包 arm64，开 R8，16MB
-./gradlew testDebugUnitTest    # 单元测试（106 个）
+./gradlew testDebugUnitTest    # 单元测试（113 个）
 ./gradlew connectedDebugAndroidTest   # 界面测试（7 个，要开着模拟器）
 ```
 

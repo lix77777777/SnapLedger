@@ -212,6 +212,196 @@ class RecognizedScreenshotTest {
         assertEquals("付款方式那一行不是商家", "腾讯云费用账户-移动支付", r.merchant)
     }
 
+    // ---- 组员的截图（2026-11-19）：金额、日期、卡号、账号、小店的名字都改过，行的位置和认错的字保持原样 ----
+
+    /** 银行 App 的「이체완료」页：收款人后面带着「님에게」，下面的账号是一长串数字。 */
+    @Test
+    fun transferDone_recipientWithoutParticle() {
+        val r = parse(
+            "top=57 h=30 | 13:42 ee 804",
+            "top=187 h=37 | 이체완료",
+            "top=580 h=53 | 신한은행 한양대학교(한양대학님에게",
+            "top=651 h=52 | 45,000원을 보냈어요",
+            "top=798 h=31 | 추가메모 자동이체",
+            "top=981 h=33 | 입금계좌 신한은행",
+            "top=1038 h=26 | 110123456789",
+            "top=1118 h=34 | 출금계좌 하나은행",
+            "top=1253 h=40 | 수수료 면제",
+            "top=1342 h=34 | 받는분에게 표시",
+            "top=1426 h=38 | 나에게 표시 한양대학교(한양대학",
+            "top=1587 h=29 | 접기스",
+            "top=1792 h=34 | 공유 확인",
+        )
+        assertTrue(r.items.isEmpty())
+        assertEquals(Money(45000, Currency.KRW), r.amount)
+        assertEquals("账号不是金额", listOf(Money(45000, Currency.KRW)), r.amountCandidates)
+        assertEquals("「님에게」不是名字的一部分", "신한은행 한양대학교(한양대학", r.merchant)
+        assertNull("这一页没写日期", r.time)
+        assertEquals(Category.EDUCATION, r.category)
+    }
+
+    /** 银行 App 的「거래내역상세」页：商家名是上面的标题，金额上面那一行是「거래구분 공과금」；余额被涂掉了。 */
+    @Test
+    fun transactionDetail_titleIsMerchant_notTheFieldRows() {
+        val r = parse(
+            "top=58 h=30 | 15:17 el! LTE 66",
+            "top=186 h=38 | 거래내역상세",
+            "top=328 h=50 | 한국전력",
+            "top=540 h=32 | 거래일시 2026.11.14 11:20:15",
+            "top=618 h=32 | 거래구분 공과금",
+            "top=695 h=33 | 거래금액 -132,580",
+            "top=771 h=40 | 거래후잔액",
+            "top=851 h=33 | 추가메모 메모 입력 >",
+            "top=1000 h=30 | 한국전력' 검색",
+            "top=1260 h=32 | 카카오톡 문자 내역복사",
+            "top=1792 h=34 | 확인",
+        )
+        assertTrue(r.items.isEmpty())
+        assertEquals(Money(132580, Currency.KRW), r.amount)
+        assertEquals("「거래구분 공과금」是一栏说明，不是商家", "한국전력", r.merchant)
+        assertEquals(at(2026, 11, 14, 11, 20, 15), r.time)
+        assertEquals(Category.HOUSING, r.category)
+    }
+
+    /** 同一种明细页，商家是没见过的名字时：「거래구분 공과금」说明这是水电燃气费。 */
+    @Test
+    fun transactionDetail_utilityKindGivesCategory() {
+        val r = parse(
+            "top=58 h=30 | 15:17 el! LTE 66",
+            "top=186 h=38 | 거래내역상세",
+            "top=328 h=50 | 삼천리",
+            "top=540 h=32 | 거래일시 2026.11.14 11:20:15",
+            "top=618 h=32 | 거래구분 공과금",
+            "top=695 h=33 | 거래금액 -38,400",
+            "top=771 h=40 | 거래후잔액",
+        )
+        assertEquals("삼천리", r.merchant)
+        assertEquals(Category.HOUSING, r.category)
+    }
+
+    /**
+     * 信用卡 App 的「카드별 이용 내역」：一张里 9 笔，金额没有正负号，「원」不是没认出来就是认成了「l」。
+     * 每笔下面一行是卡号和「국내일시불」，有的中间还夹着商标上的小字（emart24、GS25）；最下面是下一天的日期。
+     */
+    @Test
+    fun cardUsageList_rowsWithoutSignOrCurrency() {
+        val r = parse(
+            "top=58 h=31 | 15:21 ! LTE 65",
+            "top=180 h=47 | 카드별 이용 내역",
+            "top=362 h=24 | 2026.11.05",
+            "top=434 h=41 | 향미싸지루 11,000 l",
+            "top=492 h=32 | 본인1234 | 국내일시불",
+            "top=591 h=46 | 카페(cafe)달달 4,500",
+            "top=653 h=31 | 본인1234 | 국내일시불",
+            "top=751 h=44 | 이마트24 한빛대점 5,300",
+            "top=788 h=19 | emart24",
+            "top=813 h=31 | 본인1234 | 국내일시불",
+            "top=908 h=47 | (주)한솔 13,000 l",
+            "top=971 h=31 | 본인1234| 국내일시불",
+            "top=1067 h=48 | 지에스25 중앙본점 2,700",
+            "top=1109 h=19 | GS25",
+            "top=1130 h=31 | 본인1234| 국내일시불",
+            "top=1230 h=46 | 지에스25 중앙본점 1,200",
+            "top=1268 h=19 | GS25",
+            "top=1289 h=31 | 본인1234| 국내일시불",
+            "top=1388 h=43 | 교통-버스002건 1,850",
+            "top=1448 h=32 | 본인1234 | 국내일시불(후불교통)",
+            "top=1547 h=44 | 교통-지하철O01건 1,650",
+            "top=1608 h=32 | 본인1234 | 국내일시불(후불교통)",
+            "top=1710 h=38 | 쿠팡이츠쿠팡이츠_KICC 21,000 l",
+            "top=1769 h=25 | 본인1234 | 국내일시불",
+            "top=1893 h=23 | 2026.11.06",
+        )
+        val noon = at(2026, 11, 5, 12, 0)
+        assertEquals(
+            "每行左边是名字、行尾是金额；日期是上面的「2026.11.05」，没写时间按中午；最下面的日期是下一天的，不算",
+            listOf(
+                ParsedItem(Money(11000, Currency.KRW), noon, "향미싸지루", null),
+                ParsedItem(Money(4500, Currency.KRW), noon, "카페(cafe)달달", Category.CAFE),
+                ParsedItem(Money(5300, Currency.KRW), noon, "이마트24 한빛대점", Category.GROCERY),
+                ParsedItem(Money(13000, Currency.KRW), noon, "(주)한솔", null),
+                ParsedItem(Money(2700, Currency.KRW), noon, "지에스25 중앙본점", Category.GROCERY),
+                ParsedItem(Money(1200, Currency.KRW), noon, "지에스25 중앙본점", Category.GROCERY),
+                ParsedItem(Money(1850, Currency.KRW), noon, "교통-버스002건", Category.TRANSPORT),
+                ParsedItem(Money(1650, Currency.KRW), noon, "교통-지하철O01건", Category.TRANSPORT),
+                ParsedItem(Money(21000, Currency.KRW), noon, "쿠팡이츠쿠팡이츠_KICC", Category.FOOD),
+            ),
+            r.items,
+        )
+    }
+
+    /** 同一种明细的另一张：日期「2026.10.17」的点认成了逗号，只有最后一笔认出了「원」。 */
+    @Test
+    fun cardUsageList_dateWithMisreadDot() {
+        val r = parse(
+            "top=57 h=30 | 15:22 el! LTE 65",
+            "top=179 h=49 | 카드별 이용 내역",
+            "top=358 h=23 | 2026.10,17",
+            "top=430 h=43 | 아침일곱시 12,500 l",
+            "top=489 h=31 | 본인1234| 국내일시불",
+            "top=588 h=44 | 아침일곱시 7,000",
+            "top=650 h=26 | 본인1234 | 국내일시불",
+            "top=747 h=46 | 세탁oro아이스크림 1,400",
+            "top=807 h=32 | 본인1234 | 국내일시불",
+            "top=910 h=38 | 이마트24 새봄초점 16,200",
+            "top=946 h=17 | emart24",
+            "top=966 h=32 | 본인1234 | 국내일시불",
+            "top=1063 h=46 | 이마트24 4,500",
+            "top=1105 h=17 | emart24",
+            "top=1125 h=30 | 본인1234| 국내일시불",
+            "top=1225 h=44 | 세탁or아이스크림 10,000",
+            "top=1284 h=31 | 본인1234 | 국내일시불",
+            "top=1383 h=48 | 쿠팡이츠 쿠팡이츠_KCC 25,000",
+            "top=1446 h=25 | 본인1234 | 국내일시불",
+            "top=1546 h=39 | 쿠팡이츠쿠팡이츠_KICC 19,500 l",
+            "top=1603 h=30 | 본인1234| 국내일시불",
+            "top=1702 h=44 | CJ올리브영 시청앞역점 21,940 원",
+            "top=1761 h=31 | 본인1234| 국내일시불",
+            "top=1889 h=23 | 2026.10.,18",
+        )
+        assertEquals(
+            "只有一笔带「원」也是 9 笔",
+            listOf(12500L, 7000L, 1400L, 16200L, 4500L, 10000L, 25000L, 19500L, 21940L),
+            r.items.map { it.amount.minor },
+        )
+        assertEquals("「2026.10,17」是 10 月 17 日", List(9) { at(2026, 10, 17, 12, 0) }, r.items.map { it.time })
+    }
+
+    /** 明细里有两笔认出了「원」、其余没认出来时，不能只记那两笔。 */
+    @Test
+    fun cardUsageList_someRowsKeepWon() {
+        val r = parse(
+            "top=57 h=30 | 15:22 el! LTE 65",
+            "top=179 h=49 | 카드별 이용 내역",
+            "top=358 h=23 | 2026.10.17",
+            "top=430 h=43 | 아침일곱시 12,500 원",
+            "top=489 h=31 | 본인1234| 국내일시불",
+            "top=588 h=44 | 아침일곱시 7,000",
+            "top=650 h=26 | 본인1234 | 국내일시불",
+            "top=747 h=46 | 세탁or아이스크림 1,400",
+            "top=807 h=32 | 본인1234 | 국내일시불",
+            "top=910 h=38 | CJ올리브영 시청앞역점 21,940 원",
+            "top=966 h=32 | 본인1234 | 국내일시불",
+        )
+        assertEquals(listOf(12500L, 7000L, 1400L, 21940L), r.items.map { it.amount.minor })
+    }
+
+    /** 明细只截到一笔时按单笔处理：「지에스25」里的 25、卡号尾号都不是金额。 */
+    @Test
+    fun cardUsageRow_alone_brandDigitsAreNotAnAmount() {
+        val r = parse(
+            "top=58 h=31 | 15:21 ! LTE 65",
+            "top=180 h=47 | 카드별 이용 내역",
+            "top=362 h=24 | 2026.11.05",
+            "top=1067 h=48 | 지에스25 중앙본점 2,700",
+            "top=1109 h=19 | GS25",
+            "top=1130 h=31 | 본인1234| 국내일시불",
+        )
+        assertTrue(r.items.isEmpty())
+        assertEquals(Money(2700, Currency.KRW), r.amount)
+        assertEquals(listOf(Money(2700, Currency.KRW)), r.amountCandidates)
+    }
+
     private companion object {
         val LOG = Regex("""top=(\d+) h=(\d+) \| (.*)""")
     }
