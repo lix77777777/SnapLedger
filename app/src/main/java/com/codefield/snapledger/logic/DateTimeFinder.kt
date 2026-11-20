@@ -14,6 +14,8 @@ internal object DateTimeFinder {
 
     /** 月和日之间的点有时被认成逗号，或者多出一个逗号（「2026.10,17」「2026.10.,18」）。 */
     private val FULL_DATE = Regex("""(20\d{2})\s*[.\-/년年]\s*(\d{1,2})\s*[.,\-/월月],?\s*(\d{1,2})\s*[일日号]?""")
+    /** 正好 8 位、前后不再连着数字的「年月日」。订单号、账号比这长，不算。 */
+    private val COMPACT_DATE = Regex("""(?<!\d)(20\d{2})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])(?!\d)""")
     private val SHORT_DATE = Regex("""(?<![\d.])(\d{1,2})\s*(?:[월月]\s*(\d{1,2})\s*[일日号]?|/(\d{1,2}))(?![\d/])""")
     private val TIME = Regex("""(오전|오후|上午|下午|AM|PM|am|pm)?\s*(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\s*(AM|PM|am|pm))?""")
     private val PHONE = Regex("""\d{2,4}-\d{3,4}-\d{4}""")
@@ -40,6 +42,14 @@ internal object DateTimeFinder {
             val line = lines[i]
             val (date, end) = fullDate(line) ?: shortDate(line, today) ?: continue
             val time = timeIn(line.substring(end)) ?: lines.getOrNull(i + 1)?.let(::timeIn) ?: LocalTime.NOON
+            return LocalDateTime.of(date, time).atZone(zone).toInstant().toEpochMilli()
+        }
+        // 上面的写法都没找到时，再看小票流水号里连着写的日期（「03-20130713-000386 16:33」）。
+        for (line in lines) {
+            val m = COMPACT_DATE.find(line) ?: continue
+            val (year, month, day) = m.destructured
+            val date = dateOrNull(year.toInt(), month.toInt(), day.toInt())?.takeUnless { it.isAfter(today.plusDays(1)) } ?: continue
+            val time = timeIn(line.substring(m.range.last + 1)) ?: LocalTime.NOON
             return LocalDateTime.of(date, time).atZone(zone).toInstant().toEpochMilli()
         }
         return null

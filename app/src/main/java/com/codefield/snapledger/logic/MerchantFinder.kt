@@ -7,11 +7,11 @@ package com.codefield.snapledger.logic
  */
 internal object MerchantFinder {
 
-    /** 长的放前面：「商户全称」要比「商户」先匹配。 */
+    /** 长的放前面：「商户全称」要比「商户」先匹配。小票上「欢迎光临」后面跟的是店名。 */
     private val KEYS = listOf(
         "가맹점명", "가맹점", "사용처", "상호명", "상호", "결제처", "이용처",
-        "商户全称", "商户名称", "商户", "收款方全称", "收款方", "商品说明", "商品",
-        "merchant", "store",
+        "商户全称", "商户名称", "商户", "收款方全称", "收款方", "商品说明", "商品", "欢迎光临",
+        "merchant", "store", "welcome to",
     )
 
     /** 状态、付款方式、按钮这类行，不会是商家名。 */
@@ -35,8 +35,10 @@ internal object MerchantFinder {
 
     private class Option(val text: String, val score: Int)
 
-    fun find(lines: List<String>, amountLine: Int?): String? {
-        val nearest = amountLine?.let { line -> (line - 1 downTo maxOf(0, line - LOOK_UP)).firstOrNull { isNameLike(clean(lines[it])) } }
+    /** @param amountRows 「说明 + 行尾金额」的行（小票的商品明细、税额），不当作商家名。 */
+    fun find(lines: List<String>, amountLine: Int?, amountRows: Set<Int> = emptySet()): String? {
+        fun isName(i: Int): Boolean = i !in amountRows && isNameLike(clean(lines[i]))
+        val nearest = amountLine?.let { line -> (line - 1 downTo maxOf(0, line - LOOK_UP)).firstOrNull(::isName) }
         val options = mutableListOf<Option>()
         lines.forEachIndexed { i, line ->
             val trimmed = clean(line)
@@ -45,7 +47,7 @@ internal object MerchantFinder {
                 val value = clean(trimmed.substring(key.length).trimStart(':', ' '))
                 val text = value.ifEmpty { clean(lines.getOrNull(i + 1).orEmpty()) }
                 if (isNameLike(text)) options += Option(text, score(text, labelled = true, aboveAmount = false))
-            } else if (isNameLike(trimmed)) {
+            } else if (isName(i)) {
                 options += Option(trimmed, score(trimmed, labelled = false, aboveAmount = i == nearest))
             }
         }
@@ -74,7 +76,14 @@ internal object MerchantFinder {
     }
 
     private fun clean(text: String): String =
-        text.trim { it.isWhitespace() || it in JUNK || it in '①'..'⓿' }.replace(RECIPIENT, "")
+        joinSpaced(text.trim { it.isWhitespace() || it in JUNK || it in '①'..'⓿' }.replace(RECIPIENT, ""))
+
+    /** 小票常把店名的字拉开印（「동 대 문 마 트」）：隔开的几乎都是单个韩文字时，把空格去掉。 */
+    private fun joinSpaced(text: String): String {
+        val parts = text.split(' ').filter { it.isNotEmpty() }
+        val single = parts.count { it.length == 1 && it[0] in '가'..'힣' }
+        return if (single >= 2 && single >= parts.size - 1) parts.joinToString("") else text
+    }
 
     private fun isNameLike(text: String): Boolean {
         if (text.length !in 2..40 || text.none { it.isLetter() }) return false

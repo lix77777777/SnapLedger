@@ -402,6 +402,136 @@ class RecognizedScreenshotTest {
         assertEquals(listOf(Money(2700, Currency.KRW)), r.amountCandidates)
     }
 
+    // ---- 纸质小票的照片（2026-11-20）：维基共享资源上公开授权的 4 张，人名、电话、事业者号码改过，行的位置和认错的字保持原样 ----
+
+    /**
+     * 首尔一家超市的小票：说明的字是拉开印的（「합 계」），合计下面还有收的现金和找零，上面是税额；
+     * 店名写在「상호:」后面，也是拉开印的；日期只在流水号里（「03-20130713-000386」）。
+     */
+    @Test
+    fun paperReceipt_totalIsNotTaxCashOrChange() {
+        val r = parse(
+            "top=207 h=55 | 24시간 연중무휴",
+            "top=268 h=40 | 상호:동 대 문마트",
+            "top=300 h=61 | 대표:김 민수 사업자NO: 123-45-67890",
+            "top=349 h=60 | 주소:서울시 종로구 창신동 123-4호 102호",
+            "top=408 h=43 | 문의 :02-123-4567",
+            "top=489 h=54 | 상품명 수량 단 가 액",
+            "top=588 h=42 | 광천)해저파래도 1 2,950 2,950",
+            "top=636 h=43 | 롯데)파스타스150 1,200 2,400",
+            "top=684 h=44 | 농심)우육탕큰사 1 950 950",
+            "top=734 h=49 | 빙)바나니나우유혼 1 4,300 4,300",
+            "top=781 h=46 | 롯데)누드빼빼로1 1 800 800",
+            "top=876 h=40 | 과세액 - 10,364",
+            "top=924 h=41 | 부가세 - 1,036",
+            "top=973 h=51 | -면세액 - 0",
+            "top=1017 h=48 | 합 계 11,400",
+            "top=1065 h=48 | 현 급 50, 000",
+            "top=1116 h=44 | 거스름 38,600",
+            "top=1212 h=62 | 03-20130713-000386 16:33 001 김민수",
+            "top=1262 h=63 | 금액뒤 *표시품목은 부가세 면세상품입니다",
+            "top=1319 h=60 | 알아두기",
+            "top=1359 h=66 | 1,반품및 교환시 영수증을 필히 지참하세요",
+            "top=1411 h=68 | 2, 현금영수증시 계산전 미리 말씀해주세요",
+            "top=1465 h=63 | 3, 배송이 지연될시 조금만 더 기다려주세요",
+            "top=1517 h=59 | 4,스티커50장을 모으시면 고급각티슈 증정",
+        )
+        assertTrue("一张小票是一笔，税额那几行不是一笔一笔的账", r.items.isEmpty())
+        assertEquals("「합 계」是合计；现金 50,000 和找零 38,600 不是", Money(11400, Currency.KRW), r.amount)
+        assertEquals("「상호:」后面是店名，拉开印的字连起来", "동대문마트", r.merchant)
+        assertEquals("日期在流水号里", at(2013, 7, 13, 16, 33), r.time)
+        assertEquals(
+            "给用户挑的只有像钱的数字：条款的序号（1、2、3）、流水号（386）、找零都不算",
+            listOf(11400L, 4300L, 1200L, 2400L, 2950L),
+            r.amountCandidates.map { it.minor },
+        )
+    }
+
+    /** 太白一家餐馆的小票：字印得淡，店名没读对（「이태리설 /」）；合计上面是菜品明细。 */
+    @Test
+    fun paperReceipt_itemRowsAreNotTheMerchant() {
+        val r = parse(
+            "top=146 h=54 | [영수]",
+            "top=248 h=63 | 이태리설 /",
+            "top=318 h=54 | 강원똑!! 사시' 니백시 ! 의 262 (시동)",
+            "top=371 h=48 | 1층",
+            "top=433 h=57 | 033-123-4567 / 20251004-ü1-0017",
+            "top=489 h=55 | 2025-10-04 12:33:37",
+            "top=614 h=48 | 상품냉 금액",
+            "top=732 h=46 | 페퍼오l| 개 집스 29,000 29,000",
+            "top=789 h=53 | 토마토 따스타 14,000 1 14,000",
+            "top=843 h=54 | 수제 돈가스 13,000 1 13,000",
+            "top=906 h=51 | 새우 실시치 14,000 1 14,000",
+            "top=966 h=50 | 콜라 2,000 3 6,000",
+            "top=1081 h=56 | 합계 액 76,000-",
+            "top=1197 h=53 | 부기세 이세 4기책 69,094",
+            "top=1261 h=48 | 부 6,906",
+            "top=1374 h=50 | 헌l영수 ( ',.:시) [1] ++*",
+            "top=1438 h=44 | 확인번: :",
+            "top=1493 h=50 | 승인번2 : 76,000",
+            "top=1544 h=58 | 송인일시 : 2025 -10-04 12:33:37",
+        )
+        assertTrue(r.items.isEmpty())
+        assertEquals(Money(76000, Currency.KRW), r.amount)
+        assertEquals(at(2025, 10, 4, 12, 33, 37), r.time)
+        assertNull("「새우 실시치 14,000 1 14,000」是一道菜，不是店名；店名没读对时空着让用户填", r.merchant)
+    }
+
+    /** 中国麦当劳的小票：最大的数字是取餐号，店名在「欢迎光临」后面，金额没有货币符号。 */
+    @Test
+    fun paperReceipt_welcomeLineNamesTheStore() {
+        val r = parse(
+            "top=485 h=28 | 请留意店内取餐屏",
+            "top=554 h=70 | 39581",
+            "top=628 h=31 | 欢迎光临东莞天宝地铁站餐厅",
+            "top=695 h=31 | 产品详情",
+            "top=726 h=31 | 数量 产品 价格",
+            "top=759 h=30 | 1 薄荷醒醒特浓比利时黑巧 9.90",
+            "top=830 h=28 | 产晶小计 9.90",
+            "top=867 h=65 | 实付全额 9.90",
+            "top=954 h=40 | 您可以通过麦当劳PP打描二维码查看订单状态以及开",
+            "top=1002 h=30 | 发票。",
+            "top=1028 h=43 | 麦当劳喜欢您来,欢您再来!",
+        )
+        assertTrue(r.items.isEmpty())
+        assertEquals("取餐号 39581 不是金额", Money(990, Currency.CNY), r.amount)
+        assertEquals("取餐号、数量也不给用户挑", listOf(Money(990, Currency.CNY)), r.amountCandidates)
+        assertEquals("东莞天宝地铁站餐厅", r.merchant)
+        assertEquals(Category.FOOD, r.category)
+    }
+
+    /** 美国加油站的小票：全是英文，金额带「$」；金额上面一行是栏目名（「GALLONS FUEL TOTAL」），店名是认识的品牌。 */
+    @Test
+    fun paperReceipt_knownBrandBeatsTheColumnHeader() {
+        val r = parse(
+            "top=26 h=40 | SHELL V-POWER",
+            "top=76 h=40 | ACTIVELY CLEANS",
+            "top=120 h=50 | AS Y0U DRIVE",
+            "top=175 h=40 | SALES RECEIPT",
+            "top=276 h=40 | SHELL",
+            "top=326 h=40 | 2029 S SAGINAW",
+            "top=376 h=40 | MIDLAND",
+            "top=426 h=42 | MI 48640",
+            "top=522 h=50 | DATE06/21/06 4:01 PM",
+            "top=578 h=38 | INVOICE#",
+            "top=623 h=44 | AUTH#",
+            "top=676 h=40 | MASTERCARD",
+            "top=726 h=40 | ACCOUNT NUMBER",
+            "top=876 h=41 | PUMP PRODUCT $/G",
+            "top=925 h=45 | 04 UNLD $2.969",
+            "top=1025 h=44 | GALLONS FUEL TOTAL",
+            "top=1074 h=45 | 6.736 $ 20.00",
+            "top=1228 h=38 | SHELL V-POWER",
+            "top=1276 h=42 | 0UR MOST ADVANCED",
+            "top=1322 h=48 | FUEL EVER.",
+        )
+        assertTrue(r.items.isEmpty())
+        assertEquals(Money(2000, Currency.USD), r.amount)
+        assertEquals("门牌号 2029、邮编 48640 不给用户挑", listOf(Money(2000, Currency.USD)), r.amountCandidates)
+        assertEquals("SHELL", r.merchant)
+        assertEquals(Category.TRANSPORT, r.category)
+    }
+
     private companion object {
         val LOG = Regex("""top=(\d+) h=(\d+) \| (.*)""")
     }

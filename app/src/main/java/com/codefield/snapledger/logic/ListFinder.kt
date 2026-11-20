@@ -60,9 +60,17 @@ internal object ListFinder {
      * 后面最多再跟一两个字（「원」常被认成「l」）。
      */
     private fun isRow(text: String, amount: AmountCandidate): Boolean =
-        (amount.grouped || amount.marked) &&
-            text.drop(amount.end).count { !it.isWhitespace() } <= ROW_TAIL &&
-            MerchantFinder.onLine(text, amount.start) != null
+        (amount.grouped || amount.marked) && atLineEnd(text, amount) && MerchantFinder.onLine(text, amount.start) != null
+
+    /**
+     * 「名字或说明 + 行尾金额」的行：小票上的商品明细、税额这类（「토마토 파스타 14,000 1 14,000」「과세액 - 10,364」）。
+     * 这样的行不会是商家名。
+     */
+    fun isAmountRow(text: String, amount: AmountCandidate): Boolean =
+        (amount.grouped || amount.marked || amount.sign != null) && atLineEnd(text, amount)
+
+    private fun atLineEnd(text: String, amount: AmountCandidate): Boolean =
+        text.drop(amount.end).count { !it.isWhitespace() } <= ROW_TAIL
 
     private fun similarSize(amounts: List<AmountCandidate>): List<AmountCandidate> {
         val max = amounts.maxOfOrNull { it.height } ?: return emptyList()

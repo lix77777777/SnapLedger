@@ -169,4 +169,11 @@ class ReceiptParserTest {
         assertEquals(Category.TRANSPORT, CategoryGuesser.guess("滴滴出行"))
         assertNull("短英文词要整个词匹配", CategoryGuesser.guess("Cute Shop"))
     }
+
+    @Test
+    fun categoryGuesser_fuelBrandsAreTransport() {
+        for (name in listOf("SHELL", "GS칼텍스 성동점", "S-OIL", "현대오일뱅크", "SK에너지", "中石化", "中国石油")) {
+            assertEquals(name, Category.TRANSPORT, CategoryGuesser.guess(name))
+        }
+    }
 }

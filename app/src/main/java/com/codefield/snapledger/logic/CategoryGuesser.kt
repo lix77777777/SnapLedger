@@ -26,7 +26,8 @@ object CategoryGuesser {
         ),
         Category.TRANSPORT to listOf(
             "택시", "카카오t", "티머니", "t-money", "tmoney", "지하철", "버스", "코레일", "korail", "srt", "ktx", "주유",
-            "地铁", "公交", "滴滴", "打车", "高铁", "12306", "加油", "uber", "taxi",
+            "gs칼텍스", "sk에너지", "s-oil", "현대오일뱅크", "shell",
+            "地铁", "公交", "滴滴", "打车", "高铁", "12306", "加油", "中石化", "中石油", "中国石化", "中国石油", "uber", "taxi",
         ),
         Category.ENTERTAINMENT to listOf(
             "cgv", "롯데시네마", "메가박스", "megabox", "넷플릭스", "netflix", "유튜브", "youtube", "멜론", "melon",

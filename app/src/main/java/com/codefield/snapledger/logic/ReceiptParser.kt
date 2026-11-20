@@ -42,11 +42,13 @@ object ReceiptParser {
         }
 
         val best = candidates.firstOrNull()
-        val merchant = MerchantFinder.find(texts, best?.lineIndex)
+        val amountRows = candidates.filter { ListFinder.isAmountRow(texts[it.lineIndex], it) }.map { it.lineIndex }.toSet()
+        val merchant = MerchantFinder.find(texts, best?.lineIndex, amountRows)
         return ParsedReceipt(
             amount = best?.money,
-            // 余额、积分这类扣了分的数字不给用户挑，免得看着乱。
-            amountCandidates = candidates.filter { it === best || it.score >= 0 }.map { it.money }.distinct().take(MAX_CANDIDATES),
+            // 余额、积分这类扣了分的数字不给用户挑，免得看着乱；序号、门牌号这类不像钱的数字也不给。
+            amountCandidates = candidates.filter { it === best || it.score >= 0 && it.moneyLike }
+                .map { it.money }.distinct().take(MAX_CANDIDATES),
             time = DateTimeFinder.find(texts, now, zone),
             merchant = merchant,
             category = merchant?.let(CategoryGuesser::guess) ?: CategoryGuesser.guess(all),

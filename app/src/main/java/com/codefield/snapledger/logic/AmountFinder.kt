@@ -13,6 +13,7 @@ import kotlin.math.roundToInt
  * @param start 金额（连同正负号、货币符号）在这一行里从第几个字开始。列表里前面的字常常是商家名。
  * @param end 金额（连同后面的单位）在这一行里到第几个字为止（不含）。
  * @param grouped 带千位逗号（「12,500」）。没有货币符号时，带逗号的数字才比较像钱。
+ * @param fraction 写了小数（「9.90」）。
  */
 internal data class AmountCandidate(
     val money: Money,
@@ -26,7 +27,11 @@ internal data class AmountCandidate(
     val start: Int = 0,
     val end: Int = 0,
     val grouped: Boolean = false,
-)
+    val fraction: Boolean = false,
+) {
+    /** 看得出是钱：带货币符号、千位逗号、小数、正负号，或者旁边写着「合计」这类词。光秃秃的小数字多半是序号、数量、门牌号。 */
+    val moneyLike: Boolean get() = marked || grouped || fraction || sign != null || labelled
+}
 
 /**
  * 找付款金额：把每一行里像金额的数字都找出来打分，分数最高的最可能是这次付的钱。
@@ -44,12 +49,17 @@ internal object AmountFinder {
         "实付", "支付金额", "付款金额", "交易金额", "合计", "总计", "total", "amount", "paid",
     )
     private val WEAK = listOf("결제", "금액", "支付", "付款", "金额", "price")
-    /** 「subtotal」里也有「total」，所以小计、税额要单独减分。「출금가능금액」是账户里还能取的钱。 */
+    /**
+     * 「subtotal」里也有「total」，所以小计、税额要单独减分。「출금가능금액」是账户里还能取的钱。
+     * 小票上的「과세액」「면세액」是合计里含税、免税的部分，「거스름」是找回来的零钱，也都不是付的钱。
+     */
     private val NEGATIVE = listOf(
-        "잔액", "누적", "한도", "포인트", "적립", "캐시백", "할인", "부가세", "출금가능", "가능금액",
+        "잔액", "누적", "한도", "포인트", "적립", "캐시백", "할인", "부가세", "과세액", "면세액", "거스름", "출금가능", "가능금액",
         "余额", "可用", "积分", "返现", "优惠", "立减", "税额",
         "balance", "limit", "point", "discount", "subtotal",
     )
+
+    private val CJK_GAP = Regex("""(?<=[가-힣一-鿿])\s+(?=[가-힣一-鿿])""")
 
     /** 数字后面紧跟这些字时是数量、日期或百分比，不是金额。 */
     private const val COUNT_SUFFIXES = "개명건회일시분초월년个次件人天期号번%"
@@ -62,7 +72,8 @@ internal object AmountFinder {
             val line = blank(rawLine, DateTimeFinder.spans(rawLine))
             // 金额单独一行时，说明文字（比如「결제금액」）一般在上一行。
             val label = if (isBareAmount(rawLine)) lines.getOrNull(index - 1).orEmpty() + " " + rawLine else rawLine
-            val context = label.lowercase()
+            // 小票常把说明的字拉开印（「합 계」），韩文、汉字之间的空格去掉以后再比一遍。
+            val context = label.lowercase().let { it + "\n" + it.replace(CJK_GAP, "") }
             for (m in NUMBER.findAll(line)) {
                 val height = heights.getOrElse(index) { 0 }
                 candidate(line, m, index, context, height, maxHeight, documentCurrency, hasKana)?.let { result += it }
@@ -131,7 +142,7 @@ internal object AmountFinder {
         if (maxHeight > 0) score += (3.0 * height / maxHeight).roundToInt()
         return AmountCandidate(
             Money(minor, currency), index, score, height, sign, hasMarker, balance, labelled,
-            start = signAt ?: markerStart, end = m.range.last + 1, grouped = grouped,
+            start = signAt ?: markerStart, end = m.range.last + 1, grouped = grouped, fraction = decimals.isNotEmpty(),
         )
     }
 
